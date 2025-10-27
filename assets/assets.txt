@@ -1,0 +1,9 @@
+sounds/background_music.mp3
+sounds/hover_sound.mp3
+ui/background.png
+ui/heart.png
+ui/Jersey15-Regular.ttf
+ui/JollyLodger-Regular.ttf
+ui/PixelifySans-VariableFont_wght.ttf
+ui/Tiny5-Regular.ttf
+ui/title.png
