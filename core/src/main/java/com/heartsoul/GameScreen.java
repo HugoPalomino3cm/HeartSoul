@@ -1,4 +1,5 @@
 package com.heartsoul;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
@@ -7,7 +8,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public class GameScreen implements Screen {
     private Main game;
@@ -74,6 +75,35 @@ public class GameScreen implements Screen {
         game.addInputProcessor(escListener);
     }
 
+    // agregue yo
+    private void drawMovementArea(SpriteBatch batch) {
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
+
+        batch.end();
+
+        shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        shapeRenderer.setColor(0, 1, 0, 1); // Verde
+
+        float x = 1; // Posición X inicial (1 pixel desde el borde izquierdo)
+        float y = getBottomBarHeight(); // Posición Y inicial (altura de la barra inferior)
+        float width = getVirtualWidth() - 2; // Ancho del rectángulo
+        float height = getVirtualHeight() - getTopBarHeight() - getBottomBarHeight(); // Alto del rectángulo
+
+        // Línea superior
+        shapeRenderer.line(x, y + height, x + width, y + height);
+        // Línea derecha
+        shapeRenderer.line(x + width, y, x + width, y + height);
+        // Línea inferior
+        shapeRenderer.line(x, y, x + width, y);
+        // Línea izquierda
+        shapeRenderer.line(x, y, x, y + height);
+
+        shapeRenderer.end();
+
+        batch.begin();
+    }
+
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -85,6 +115,9 @@ public class GameScreen implements Screen {
         batch.begin();
         header();
         heart.draw(batch, this);
+
+        // aca añado la funcion que añadi yo
+        drawMovementArea(batch); // Mostrar área de movimiento
         // Aquí irá la lógica del juego
         batch.end();
     }

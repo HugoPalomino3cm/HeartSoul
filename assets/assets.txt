@@ -1,6 +1,7 @@
 sounds/background_music.mp3
 sounds/hover_sound.mp3
 ui/background.png
+ui/gameGuideBackground.png
 ui/heart.png
 ui/Jersey15-Regular.ttf
 ui/JollyLodger-Regular.ttf

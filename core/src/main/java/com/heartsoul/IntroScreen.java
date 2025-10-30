@@ -18,6 +18,8 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.math.Interpolation;
+import com.heartsoul.screens.GuideScreen;
+
 
 /** First screen of the application. Displayed after the application is created. */
 public class IntroScreen implements Screen {
@@ -109,6 +111,41 @@ public class IntroScreen implements Screen {
             }
         });
 
+        // Botón GUÍA
+        TextButton guideButton = new TextButton("GUÍA", buttonStyle);
+        guideButton.setTransform(true);
+        guideButton.setOrigin(Align.center);
+
+        // Efecto hover
+        guideButton.addListener(new InputListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                guideButton.clearActions();
+                guideButton.addAction(Actions.scaleTo(1.5f, 1.5f, 0.2f, Interpolation.fade));
+                Gdx.audio.newSound(Gdx.files.internal("sounds/hover_sound.mp3")).play();
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                guideButton.clearActions();
+                guideButton.addAction(Actions.scaleTo(1.0f, 1.0f, 0.2f, Interpolation.fade));
+            }
+        });
+
+        // Click para abrir la pantalla de guía
+        guideButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                if (bgMusic != null) {
+                    bgMusic.stop();
+                    bgMusic.dispose();
+                    bgMusic = null;
+                }
+                game.removeInputProcessor(stage);
+                game.setScreen(new GuideScreen(game));
+            }
+        });
+
         // Botón SALIR debajo de JUGAR
         TextButton exitButton = new TextButton("SALIR", buttonStyle);
         exitButton.setTransform(true);
@@ -144,9 +181,11 @@ public class IntroScreen implements Screen {
 
         // Añadir los botones en dos filas y bajar su posición para que no se sobrepongan con el título
         // padTop mueve el contenido hacia abajo dentro de la pantalla virtual
-        table.center().padTop(220);
+        table.center().padTop(380);
         table.row();
         table.add(playButton).padBottom(20);
+        table.row();
+        table.add(guideButton).padTop(10).padBottom(20);
         table.row();
         table.add(exitButton).padTop(10);
     }
