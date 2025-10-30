@@ -12,21 +12,31 @@ public class Entities {
     private int xSpeed;
     private int ySpeed;
     private Sprite spr;
+    private int worldWidth;
+    private int worldHeight;
 
+    // Constructor original delega al nuevo usando las dimensiones actuales de la pantalla
     public Entities(int x, int y, int size, int xSpeed, int ySpeed, Texture tx) {
+        this(x, y, size, xSpeed, ySpeed, tx, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    // Nuevo constructor que recibe las dimensiones del mundo (virtual)
+    public Entities(int x, int y, int size, int xSpeed, int ySpeed, Texture tx, int worldWidth, int worldHeight) {
         spr = new Sprite(tx);
+        this.worldWidth = worldWidth;
+        this.worldHeight = worldHeight;
         this.x = x;
 
         //validar que borde de esfera no quede fuera
-        if (x-size < 0) this.x = x+size;
-        if (x+size > Gdx.graphics.getWidth())this.x = x-size;
+        if (x - size < 0) this.x = x + size;
+        if (x + size > this.worldWidth) this.x = x - size;
 
         this.y = y;
         //validar que borde de esfera no quede fuera
-        if (y-size < 0) this.y = y+size;
-        if (y+size > Gdx.graphics.getHeight())this.y = y-size;
+        if (y - size < 0) this.y = y + size;
+        if (y + size > this.worldHeight) this.y = y - size;
 
-        spr.setPosition(x, y);
+        spr.setPosition(this.x, this.y);
         this.setXSpeed(xSpeed);
         this.setySpeed(ySpeed);
     }
@@ -35,9 +45,9 @@ public class Entities {
         x += getXSpeed();
         y += getySpeed();
 
-        if (x+getXSpeed() < 0 || x+getXSpeed()+spr.getWidth() > Gdx.graphics.getWidth())
+        if (x + getXSpeed() < 0 || x + getXSpeed() + spr.getWidth() > worldWidth)
             setXSpeed(getXSpeed() * -1);
-        if (y+getySpeed() < 0 || y+getySpeed()+spr.getHeight() > Gdx.graphics.getHeight())
+        if (y + getySpeed() < 0 || y + getySpeed() + spr.getHeight() > worldHeight)
             setySpeed(getySpeed() * -1);
         spr.setPosition(x, y);
     }

@@ -2,6 +2,7 @@ package com.heartsoul;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -25,13 +26,21 @@ public class IntroScreen implements Screen {
     private Texture background;
     private Texture title;
     private Stage stage;
+    private FitViewport viewport;
     private float elapsedTime = 0f;
+
+    // Sonidos
+    private Music bgMusic;
+
+    // Virtual resolution to keep the game's original aesthetic
+    private static final int VIRTUAL_WIDTH = 1200;
+    private static final int VIRTUAL_HEIGHT = 800;
 
     public IntroScreen(Main game) {
         this.game = game;
 
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 1200, 800);
+        camera.setToOrtho(false, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
     }
 
     @Override
@@ -40,15 +49,19 @@ public class IntroScreen implements Screen {
         title = new Texture(Gdx.files.internal("ui/title.png"));
 
         // Crear el menú
-        stage = new Stage(new FitViewport(1200, 800));
-        Gdx.input.setInputProcessor(stage);
+        viewport = new FitViewport(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, camera);
+        stage = new Stage(viewport);
+        // Registrar el stage en el InputMultiplexer del Main para que coexistan múltiples processors
+        game.addInputProcessor(stage);
 
         Table table = new Table();
         table.setFillParent(true);
         stage.addActor(table);
 
-        // musica de fondo
-        Gdx.audio.newSound(Gdx.files.internal("sounds/background_music.mp3")).play();
+        // musica de fondo: usar Music para streaming y poder pararla/reanudar correctamente
+        bgMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/background_music.mp3"));
+        bgMusic.setLooping(true);
+        bgMusic.play();
 
         // Crear estilos para los elementos de UI
         Label.LabelStyle labelStyle = new Label.LabelStyle();
@@ -85,12 +98,57 @@ public class IntroScreen implements Screen {
         playButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                // Antes de cambiar de pantalla, quitar el processor y parar la música
+                if (bgMusic != null) {
+                    bgMusic.stop();
+                    bgMusic.dispose();
+                    bgMusic = null;
+                }
+                game.removeInputProcessor(stage);
                 game.setScreen(new GameScreen(game, 1, 3, 0));
             }
         });
 
+        // Botón SALIR debajo de JUGAR
+        TextButton exitButton = new TextButton("SALIR", buttonStyle);
+        exitButton.setTransform(true);
+        exitButton.setOrigin(Align.center);
+        // Efecto hover (más sutil)
+        exitButton.addListener(new InputListener() {
+            @Override
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                exitButton.clearActions();
+                exitButton.addAction(Actions.scaleTo(1.2f, 1.2f, 0.15f, Interpolation.fade));
+                Gdx.audio.newSound(Gdx.files.internal("sounds/hover_sound.mp3")).play();
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                exitButton.clearActions();
+                exitButton.addAction(Actions.scaleTo(1.0f, 1.0f, 0.15f, Interpolation.fade));
+            }
+        });
+
+        exitButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                // Salir de la aplicación: parar y liberar música
+                if (bgMusic != null) {
+                    bgMusic.stop();
+                    bgMusic.dispose();
+                    bgMusic = null;
+                }
+                Gdx.app.exit();
+            }
+        });
+
+        // Añadir los botones en dos filas y bajar su posición para que no se sobrepongan con el título
+        // padTop mueve el contenido hacia abajo dentro de la pantalla virtual
+        table.center().padTop(220);
         table.row();
-        table.add(playButton).padBottom(playButton.getHeight() - 200);
+        table.add(playButton).padBottom(20);
+        table.row();
+        table.add(exitButton).padTop(10);
     }
 
     @Override
@@ -99,14 +157,14 @@ public class IntroScreen implements Screen {
 
         elapsedTime += delta;
         float amplitude = 20f; // altura máxima del movimiento
-        float baseY = stage.getHeight() - title.getHeight();
+        float baseY = viewport.getWorldHeight() - title.getHeight();
         float offsetY = (float) Math.sin(elapsedTime * 2) * amplitude;
         float titleY = baseY + offsetY;
-        float titleX = (stage.getWidth() - title.getWidth()) / 2f;
+        float titleX = (viewport.getWorldWidth() - title.getWidth()) / 2f;
 
         // Fondo
         stage.getBatch().begin();
-        stage.getBatch().draw(background, 0, 0, stage.getWidth(), stage.getHeight());
+        stage.getBatch().draw(background, 0, 0, viewport.getWorldWidth(), viewport.getWorldHeight());
         stage.getBatch().draw(title, titleX, titleY);
         stage.getBatch().end();
 
@@ -117,7 +175,8 @@ public class IntroScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        // Resize your screen here. The parameters represent the new window size.
+        // Actualizar viewport para mantener la relación de aspecto y escalar la UI
+        if (viewport != null) viewport.update(width, height, true);
     }
 
     @Override
@@ -133,10 +192,26 @@ public class IntroScreen implements Screen {
     @Override
     public void hide() {
         // This method is called when another screen replaces this one.
+        // Asegurarnos de quitar el processor si el stage estaba registrado
+        if (stage != null) game.removeInputProcessor(stage);
+        // detener y liberar música por si acaso
+        if (bgMusic != null) {
+            bgMusic.stop();
+            bgMusic.dispose();
+            bgMusic = null;
+        }
     }
 
     @Override
     public void dispose() {
-        stage.dispose();
+        if (stage != null) {
+            game.removeInputProcessor(stage);
+            stage.dispose();
+        }
+        if (bgMusic != null) {
+            bgMusic.stop();
+            bgMusic.dispose();
+            bgMusic = null;
+        }
     }
 }

@@ -55,13 +55,20 @@ public class Heart {
             float newX = x + xVel;
             float newY = y + yVel;
 
-            // Hitbox - limitar movimiento a los bordes de la pantalla
+            // Usar dimensiones virtuales del GameScreen para limitar movimiento
+            int maxW = game.getVirtualWidth();
+            int maxH = game.getVirtualHeight();
+
+            int bottomLimit = game.getBottomBarHeight();
+            int topLimit = maxH - game.getTopBarHeight();
+
+            // Hitbox - limitar movimiento a los bordes de la pantalla y respetar las barras invisibles
             if (newX < 0) newX = 0;
-            if (newX + spr.getWidth() > Gdx.graphics.getWidth())
-                newX = Gdx.graphics.getWidth() - spr.getWidth();
-            if (newY < 0) newY = 0;
-            if (newY + spr.getHeight() > Gdx.graphics.getHeight())
-                newY = Gdx.graphics.getHeight() - spr.getHeight();
+            if (newX + spr.getWidth() > maxW)
+                newX = maxW - spr.getWidth();
+            if (newY < bottomLimit) newY = bottomLimit;
+            if (newY + spr.getHeight() > topLimit)
+                newY = topLimit - spr.getHeight();
 
             // Actualizar posición y bounds
             spr.setPosition(newX, newY);

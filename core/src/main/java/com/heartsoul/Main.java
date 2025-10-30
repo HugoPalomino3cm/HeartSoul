@@ -1,8 +1,11 @@
 package com.heartsoul;
 
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.InputMultiplexer;
+import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -17,6 +20,8 @@ public class Main extends Game {
     private BitmapFont largeFont;
     private String gameName = "HeartSoul";
     private int highScore;
+
+    private InputMultiplexer inputMultiplexer;
 
     @Override
     public void create() {
@@ -43,7 +48,36 @@ public class Main extends Game {
 
         generator.dispose();
 
+        // Preparar InputMultiplexer para permitir múltiples processors (escenas + atajos globales)
+        inputMultiplexer = new InputMultiplexer();
+        // Añadir listener para F11 dentro del multiplexer
+        inputMultiplexer.addProcessor(new InputAdapter() {
+            @Override
+            public boolean keyDown(int keycode) {
+                if (keycode == Input.Keys.F11) {
+                    if (Gdx.graphics.isFullscreen()) {
+                        Gdx.graphics.setWindowedMode(1200, 800);
+                    } else {
+                        Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+        Gdx.input.setInputProcessor(inputMultiplexer);
+
         setScreen(new IntroScreen(this));
+    }
+
+    // Permite a pantallas/stages añadir su InputProcessor al multiplexer
+    public void addInputProcessor(InputProcessor p) {
+        if (inputMultiplexer != null) inputMultiplexer.addProcessor(p);
+        else Gdx.input.setInputProcessor(p);
+    }
+
+    public void removeInputProcessor(InputProcessor p) {
+        if (inputMultiplexer != null) inputMultiplexer.removeProcessor(p);
     }
 
     public BitmapFont getSmallFont() {
