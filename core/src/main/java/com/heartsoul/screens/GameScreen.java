@@ -22,7 +22,7 @@ public class GameScreen extends BaseScreen {
     private final ShapeRenderer shapeRenderer;
     private final List<Projectile> projectiles = new ArrayList<>();
     private final Texture bulletTx = new Texture(Gdx.files.internal("ui/bullet.png"));
-
+    private Texture lifeIconTexture;
 
     private String powerUp = "NINGUNO";
     private int timerSeconds = 45;
@@ -47,6 +47,8 @@ public class GameScreen extends BaseScreen {
         // Preparar fuente
         game.getSmallFont().getData().setScale(1f);
 
+        GlyphLayout gl = new GlyphLayout();
+
         // Dibujar fondo de la barra superior con ShapeRenderer (finaliza batch temporalmente)
         batch.end();
         shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
@@ -56,37 +58,56 @@ public class GameScreen extends BaseScreen {
         shapeRenderer.end();
         batch.begin();
 
-        // Preparar corazones
-        StringBuilder hearts = new StringBuilder();
-        for (int i = 0; i < heart.getLives(); i++) {
-            hearts.append("♡"); // corazón
-            if (i < heart.getLives() - 1) hearts.append(" ");
-        }
-
         // Posiciones de texto (dos líneas dentro de la barra superior)
         float topY = VIRTUAL_HEIGHT - 10f;
         float secondLineY = VIRTUAL_HEIGHT - 50f;
 
-        // Primera línea: Vidas / PUNTAJE / RONDA
-        String leftText = "VIDAS: " + hearts.toString();
+        // Estilos para los íconos de vida
+        float iconWidth = 50f; // ancho
+        float iconHeight = 40f; // alto
+        float iconPadding = 12f; // espacio entre íconos
+
+        // Textos de la primera línea
+        String leftText = "VIDAS: ";
         String centerText = "PUNTAJE: " + this.score;
         String rightText = "RONDA: " + this.round;
 
-        // Dibujar izquierda
+        // Dibujar Vidas (Izquierda)
         game.getSmallFont().setColor(Color.RED);
         game.getSmallFont().draw(batch, leftText, 10, topY);
 
-        // Dibujar centro
-        GlyphLayout gl = new GlyphLayout(game.getSmallFont(), centerText);
+        // Dibujar íconos de vida junto al texto
+
+        // Medir el texto "VIDAS: " para calcular dónde empezar los íconos
+        gl.setText(game.getSmallFont(), leftText);
+
+        // Posición X inicial para el primer ícono
+        float startX = 10 + gl.width + iconPadding;
+        // Posición Y (alinea arriba)
+        float iconY = topY + 5 - iconHeight;
+
+        for (int i = 0; i < heart.getLives(); i++) {
+            // Usamos el método draw() que escala la imagen
+            batch.draw(
+                lifeIconTexture,
+                startX + i * (iconWidth + iconPadding), // Usamos iconPadding
+                iconY,
+                iconWidth,
+                iconHeight
+            );
+        }
+
+        // Dibujar Puntaje (Centro)
+        gl.setText(game.getSmallFont(), centerText); // Reutilizamos 'gl'
         game.getSmallFont().setColor(Color.WHITE);
         game.getSmallFont().draw(batch, centerText, (VIRTUAL_WIDTH - gl.width) / 2f, topY);
 
-        // Dibujar derecha
-        gl.setText(game.getSmallFont(), rightText);
+        // Dibujar Ronda (Derecha)
+        gl.setText(game.getSmallFont(), rightText); // Reutilizamos 'gl'
         game.getSmallFont().setColor(Color.GOLD);
         game.getSmallFont().draw(batch, rightText, VIRTUAL_WIDTH - gl.width - 10f, topY);
 
-        // Segunda línea: Power-Up y Tiempo
+        // Textos de la segunda línea
         String powerText = "Power-Up: [" + powerUp + "]";
         String timeText = String.format("Tiempo Rund: %02d:%02d", timerSeconds / 60, timerSeconds % 60);
 
@@ -127,6 +148,7 @@ public class GameScreen extends BaseScreen {
     public void show() {
         registerESC();
         background = new Texture(Gdx.files.internal("ui/gameGuideBackground.png"));
+        lifeIconTexture = new Texture(Gdx.files.internal("ui/life.png"));
     }
 
     // Lineas de contorno que limitan el movimiento del jugar
@@ -218,6 +240,9 @@ public class GameScreen extends BaseScreen {
         super.dispose();
         if (shapeRenderer != null) {
             shapeRenderer.dispose();
+        }
+        if (bulletTx != null) {
+            bulletTx.dispose();
         }
     }
 }

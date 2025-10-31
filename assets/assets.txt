@@ -10,4 +10,5 @@ ui/background.png
 ui/bullet.png
 ui/gameGuideBackground.png
 ui/heart.png
+ui/life.png
 ui/title.png
