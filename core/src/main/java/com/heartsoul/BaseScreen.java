@@ -34,7 +34,7 @@ public abstract class BaseScreen implements Screen {
     protected static final int VIRTUAL_WIDTH = 1920;
     protected static final int VIRTUAL_HEIGHT = 1080;
     protected static final int BOTTOM_UI_HEIGHT = 40;
-    protected static final int TOP_UI_HEIGHT = 40;
+    protected static final int TOP_UI_HEIGHT = 100;
 
     public BaseScreen(Main game) {
         this.game = game;
