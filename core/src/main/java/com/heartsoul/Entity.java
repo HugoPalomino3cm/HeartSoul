@@ -3,9 +3,11 @@ package com.heartsoul;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Rectangle;
+import com.heartsoul.screens.GameScreen;
 
 public abstract class Entity {
-    protected Sprite spr;
+    private Sprite spr;
     protected int lives;
     protected boolean dead = false;
 
@@ -17,25 +19,30 @@ public abstract class Entity {
         spr.setBounds(x, y, size, size);
     }
 
-    public abstract void draw(SpriteBatch batch, GameScreen game);
-
-    public boolean isDead() {
-        return dead;
+    public boolean checkCollision(Entity e) {
+        if(e.getBoundingRectangle().overlaps(spr.getBoundingRectangle())){
+            lives--;
+            if (lives<=0)
+                dead = true;
+            return true;
+        }
+        return false;
     }
 
-    public int getLives() {
-        return lives;
+    public void draw(SpriteBatch batch, GameScreen game) {
+        spr.draw(batch);
     }
 
-    public int getX() {
-        return (int) spr.getX();
-    }
+    public abstract void update();
 
-    public int getY() {
-        return (int) spr.getY();
-    }
+    public boolean isDead() { return dead; }
+    public int getLives() { return lives; }
 
-    public void setLives(int lives) {
-        this.lives = lives;
-    }
+    public float getX() { return spr.getX(); }
+    public float getY() { return spr.getY(); }
+    public float getWidth() { return spr.getWidth(); }
+    public float getHeight() { return spr.getHeight(); }
+    public void setPosition(float x, float y) { spr.setPosition(x, y); }
+    public Rectangle getBoundingRectangle() { return spr.getBoundingRectangle(); }
+    public void setLives(int lives) { this.lives = lives; }
 }

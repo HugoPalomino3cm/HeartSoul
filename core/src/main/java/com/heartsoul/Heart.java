@@ -1,38 +1,24 @@
 package com.heartsoul;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.heartsoul.screens.GameScreen;
 
 public class Heart extends Entity {
-    private float xVel = 0;
-    private float yVel = 0;
+    private static final int MAX_HURT_TIME = 50;
     private boolean hit = false;
-    private int maxHurtTime = 50;
     private int hurtTime;
 
     public Heart(int x, int y, Texture tx) {
-        super(x, y, tx, 45, 3); // tamaño 45, 3 vidas
+        super(x, y, tx, 60, 3); // tamaño 60, 3 vidas
     }
 
-    @Override
-    public void draw(SpriteBatch batch, GameScreen game){
-        float x = spr.getX();
-        float y = spr.getY();
+    public void move(float dx, float dy, GameScreen game) {
         if (!hit) {
-            // Movimiento horizontal
-            if (Gdx.input.isKeyPressed(Input.Keys.A)) xVel = -2;
-            else if (Gdx.input.isKeyPressed(Input.Keys.D)) xVel = 2;
-            else xVel = 0;
-            // Movimiento vertical
-            if (Gdx.input.isKeyPressed(Input.Keys.S)) yVel = -2;
-            else if (Gdx.input.isKeyPressed(Input.Keys.W)) yVel = 2;
-            else yVel = 0;
-
-            float newX = x + xVel;
-            float newY = y + yVel;
+            float newX = getX() + dx;
+            float newY = getY() + dy;
 
             int maxW = game.getVirtualWidth();
             int maxH = game.getVirtualHeight();
@@ -40,30 +26,50 @@ public class Heart extends Entity {
             int topLimit = maxH - game.getTopBarHeight();
 
             if (newX < 0) newX = 0;
-            if (newX + spr.getWidth() > maxW) newX = maxW - spr.getWidth();
+            if (newX + getWidth() > maxW) newX = maxW - getWidth();
             if (newY < bottomLimit) newY = bottomLimit;
-            if (newY + spr.getHeight() > topLimit) newY = topLimit - spr.getHeight();
+            if (newY + getHeight() > topLimit) newY = topLimit - getHeight();
 
-            spr.setPosition(newX, newY);
-            spr.setBounds(newX, newY, spr.getWidth(), spr.getHeight());
-
-            spr.draw(batch);
-        } else {
-            spr.setX(spr.getX()+MathUtils.random(-2,2));
-            spr.draw(batch);
-            spr.setX(x);
-            hurtTime--;
-            if (hurtTime<=0) hit = false;
+            setPosition(newX, newY);
         }
     }
 
-    public boolean checkCollision(Entity b) {
-        if(!hit && b.spr.getBoundingRectangle().overlaps(spr.getBoundingRectangle())){
-            lives--;
+    public void update() {
+        if (hit) {
+            hurtTime--;
+            if (hurtTime <= 0) hit = false;
+        }
+    }
+
+    @Override
+    public void draw(SpriteBatch batch, GameScreen game){
+        if (hit) {
+            float shakeOffset = MathUtils.random(-2, 2);
+
+            // Aplica shake solo al dibujar, usando los métodos encapsulados
+            setPosition(getX() + shakeOffset, getY());
+            super.draw(batch, game); // Llama a la base para dibujar el sprite
+            setPosition(getX() - shakeOffset, getY());
+        } else {
+            super.draw(batch, game); // Llama a la base para dibujar el sprite
+        }
+    }
+
+    @Override
+    public boolean checkCollision(Entity e) {
+        if(!hit && e.getBoundingRectangle().overlaps(getBoundingRectangle())) {
             hit = true;
-            hurtTime=maxHurtTime;
-            if (lives<=0)
-                dead = true;
+            hurtTime = MAX_HURT_TIME;
+            try {
+                com.badlogic.gdx.audio.Sound hitSound =
+                    com.badlogic.gdx.Gdx.audio.newSound(
+                        com.badlogic.gdx.Gdx.files.internal("sounds/hitSound.mp3")
+                    );
+                hitSound.play();
+            } catch (Exception ex) {
+                ex.printStackTrace(); // Muestra el error en consola
+            }
+            super.checkCollision(e);
             return true;
         }
         return false;

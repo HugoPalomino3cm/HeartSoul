@@ -2,35 +2,41 @@ package com.heartsoul;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.Texture;
+import com.heartsoul.screens.GameScreen;
 
 public abstract class Projectile extends Entity {
     protected float xVel, yVel;
 
-    // Constructor del proyectil
     public Projectile(int x, int y, Texture tx, int size, float xVel, float yVel) {
-        super(x, y, tx, size, 1); // normal un proyectil tiene 1 vida, puedes cambiarlo
+        super(x, y, tx, size, 1); // normalmente un proyectil tiene 1 vida
         this.xVel = xVel;
         this.yVel = yVel;
     }
 
-    // Dibujar el proyectil si no está muerto
     @Override
     public void draw(SpriteBatch batch, GameScreen game) {
         if (!dead) {
-            spr.draw(batch);
+            super.draw(batch, game);
         }
     }
 
-    // Método para actualizar posición y verificar si sale de pantalla
-    public void update(GameScreen game) {
-        spr.setPosition(spr.getX() + xVel, spr.getY() + yVel);
+    @Override
+    public void update() {
+        setPosition(getX() + xVel, getY() + yVel);
 
+        // Si sale de los límites de la pantalla, lo marcamos como muerto
+        // (Obtén el GameScreen de contexto donde uses update si necesitas los límites)
+        // Aquí se asume que tienes acceso a los límites de pantalla de alguna manera
+        // Si necesitas el GameScreen, cambia la firma a update(GameScreen game)
+    }
+
+    // Método para verificar si sale de pantalla, llámalo desde el GameScreen o desde update si pasas GameScreen
+    public void checkBounds(GameScreen game) {
         int maxW = game.getVirtualWidth();
         int maxH = game.getVirtualHeight();
 
-        // Destruir si sale de los límites
-        if (spr.getX() + spr.getWidth() < 0 || spr.getX() > maxW ||
-            spr.getY() + spr.getHeight() < 0 || spr.getY() > maxH) {
+        if (getX() + getWidth() < 0 || getX() > maxW ||
+            getY() + getHeight() < 0 || getY() > maxH) {
             dead = true;
         }
     }

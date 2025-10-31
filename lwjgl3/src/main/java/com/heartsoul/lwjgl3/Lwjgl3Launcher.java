@@ -18,6 +18,7 @@ public class Lwjgl3Launcher {
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
         configuration.setTitle("HeartSoul");
+        configuration.setWindowIcon("img.png");
         //// Vsync limits the frames per second to what your hardware can display, and helps eliminate
         //// screen tearing. This setting doesn't always work on Linux, so the line after is a safeguard.
         configuration.useVsync(true);
@@ -25,7 +26,7 @@ public class Lwjgl3Launcher {
         //// refresh rates. The Vsync setting above should limit the actual FPS to match the monitor.
         configuration.setForegroundFPS(Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate + 1);
         //// Start the game in fullscreen on the primary monitor so the virtual viewports keep the same aspect and layout.
-        configuration.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
+        //configuration.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode());
         //// You can change these files; they are in lwjgl3/src/main/resources/ .
         configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
         return configuration;

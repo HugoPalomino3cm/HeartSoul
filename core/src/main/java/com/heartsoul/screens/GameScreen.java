@@ -1,11 +1,15 @@
-package com.heartsoul;
+package com.heartsoul.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.math.MathUtils;
+import com.heartsoul.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +21,7 @@ public class GameScreen extends BaseScreen {
     private final Heart heart;
     private final ShapeRenderer shapeRenderer;
     private final List<Projectile> projectiles = new ArrayList<>();
+    private final Texture bulletTx = new Texture(Gdx.files.internal("ui/bullet.png"));
 
 
     private String powerUp = "NINGUNO";
@@ -102,25 +107,18 @@ public class GameScreen extends BaseScreen {
     private void spawnProjectiles(float delta) {
         spawnTimer += delta;
 
-        // variable para intervalo aleatorio
-        float randomInterval = com.badlogic.gdx.math.MathUtils.random(0.5f, 3f);
+        // Intervalo aleatorio entre 0.5 y 3 segundos
+        float randomInterval = MathUtils.random(0.5f, 3f);
 
-        //
         if (spawnTimer >= randomInterval) {
             spawnTimer = 0f;
 
-            // Crear textura de la bala (usa heart.png temporalmente)
-            Texture bulletTx = new Texture(Gdx.files.internal("ui/bullet.png"));
-
-            // Crear bala desde la izquierda moviéndose hacia la derecha
+            // Crea el bullet usando el constructor con randomX y Y arriba
             Bullet bullet = new Bullet(
-                0, // x inicial (borde izquierdo)
-                VIRTUAL_HEIGHT / 2, // y inicial (centro vertical)
-                bulletTx,
-                3f, // velocidad x (hacia la derecha)
-                0f  // velocidad y (sin movimiento vertical)
+                VIRTUAL_WIDTH,
+                VIRTUAL_HEIGHT,
+                bulletTx
             );
-
             projectiles.add(bullet);
         }
     }
@@ -128,6 +126,7 @@ public class GameScreen extends BaseScreen {
     @Override
     public void show() {
         registerESC();
+        background = new Texture(Gdx.files.internal("ui/gameGuideBackground.png"));
     }
 
     // Lineas de contorno que limitan el movimiento del jugar
@@ -160,25 +159,41 @@ public class GameScreen extends BaseScreen {
     @Override
     public void render(float delta) {
         clearScreen();
-
         camera.update();
         batch.setProjectionMatrix(camera.combined);
 
+        // Procesa la entrada del usuario
+        float dx = 0f, dy = 0f;
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) dx = -2f;
+        else if (Gdx.input.isKeyPressed(Input.Keys.D)) dx = 2f;
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) dy = -2f;
+        else if (Gdx.input.isKeyPressed(Input.Keys.W)) dy = 2f;
+
+        // Movemos el heart
+        heart.move(dx, dy, this);
+        heart.update();
+
         batch.begin();
+        // Fondo
+        Color oldColor = batch.getColor();
+        batch.setColor(1f, 1f, 1f, 0.6f);
+        batch.draw(background, 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        batch.setColor(oldColor);
+
         header();
         heart.draw(batch, this);
 
-        // generar proyectiles
+        // Generar proyectiles desde arriba
         spawnProjectiles(delta);
 
-        // AQUÍ VA EL CÓDIGO DE LOS PROYECTILES ⬇️
-        // Actualizar proyectiles
+        // Actualizar y dibujar proyectiles
         for (Projectile projectile : projectiles) {
-            projectile.update(this);
+            projectile.update();
+            projectile.checkBounds(this);
 
             // Verificar colisión con Heart
             if (!projectile.isDead() && heart.checkCollision(projectile)) {
-                projectile.onCollision(); // Destruir proyectil
+                projectile.onCollision();
             }
 
             projectile.draw(batch, this);
@@ -186,74 +201,16 @@ public class GameScreen extends BaseScreen {
 
         // Remover proyectiles destruidos
         projectiles.removeIf(Entity::isDead);
-        // FIN DEL CÓDIGO DE PROYECTILES ⬆️
 
         drawMovementArea(batch);
-
-        /*
-        if (!heart.isHit()) {
-            for (int i = 0; i < projectiles.size(); i++) {
-                Projectile b = projectiles.get(i);
-                // Código comentado que usaba balls1 y balls2
-                // for (int j = 0; j < balls1.size(); j++) {
-                //     if (b.checkCollision(balls1.get(j))) {
-                //         explosionSound.play();
-                //         balls1.remove(j);
-                //         balls2.remove(j);
-                //         j--;
-                //         score +=10;
-                //     }
-                // }
-
-                if (b.isDead()) {
-                    projectiles.remove(b);
-                    i--;
-                }
-            }
-        }
-
-        // colisiones entre asteroides y sus rebotes
-        // for (int i=0; i<projectiles.size(); i++) {
-        //     Projectile ball1 = projectiles.get(i);
-        //     for (int j=0; j<projectiles.size(); j++) {
-        //         Projectile ball2 = projectiles.get(j);
-        //         if (i<j) {
-        //             ball1.checkCollision(ball2);
-        //         }
-        //     }
-        // }
-
-        // dibujar asteroides y manejar colision con nave
-        // for (int i = 0; i < balls1.size(); i++) {
-        //     Ball2 b = balls1.get(i);
-        //     b.draw(batch);
-        //     if (heart.checkCollision(b)) {
-        //         balls1.remove(i);
-        //         balls2.remove(i);
-        //         i--;
-        //     }
-        // }
-        */
 
         if (heart.isDead()) {
             if (score > game.getHighScore())
                 game.setHighScore(score);
-            // Screen ss = new GameOverScreen(game);
-            // game.setScreen(ss);
-            // dispose();
+            game.removeInputProcessor(stage);
+            game.setScreen(new GameOverScreen(game));
         }
-
         batch.end();
-
-        // nivel completado
-        /*
-        if (projectiles.size() == 0) {
-            Screen ss = new GameScreen(game, round+1, heart.getLives(), score);
-            ss.resize(1200, 800);
-            game.setScreen(ss);
-            dispose();
-        }
-        */
     }
 
     @Override

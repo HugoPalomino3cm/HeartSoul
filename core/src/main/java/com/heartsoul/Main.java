@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.heartsoul.screens.IntroScreen;
+
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends Game {
@@ -29,7 +31,7 @@ public class Main extends Game {
         batch = new SpriteBatch();
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
-            Gdx.files.internal("ui/PixelifySans-VariableFont_wght.ttf")
+            Gdx.files.internal("fonts/PixelifySans-VariableFont_wght.ttf")
         );
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
 

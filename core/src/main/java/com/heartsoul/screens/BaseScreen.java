@@ -1,4 +1,4 @@
-package com.heartsoul;
+package com.heartsoul.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -20,6 +20,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.heartsoul.Main;
 
 public abstract class BaseScreen implements Screen {
     protected final Main game;
