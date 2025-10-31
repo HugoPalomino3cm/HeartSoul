@@ -1,72 +1,45 @@
-package com.heartsoul.screens;
+package com.heartsoul;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.math.Interpolation;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
-import com.heartsoul.Main;
-import com.heartsoul.IntroScreen;
 
-public class GuideScreen implements Screen {
-    private final Main game;
-    private OrthographicCamera camera;
-    private Viewport viewport;
-    private Stage stage;
-    private Texture backgroundTexture;
+public class GuideScreen extends BaseScreen {
     private BitmapFont titleFont;
     private BitmapFont contentFont;
 
-    private static final float WORLD_WIDTH = 1200;
-    private static final float WORLD_HEIGHT = 800;
-
-    private Table mainMenu;
+    private Table table;
     private Table contentTable;
     private boolean showingSection = false;
 
     public GuideScreen(Main game) {
-        this.game = game;
+        super(game);
+        titleFont = game.getLargeFont();
+        contentFont = game.getMediumFont();
     }
 
     @Override
     public void show() {
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, WORLD_WIDTH, WORLD_HEIGHT);
-        viewport = new FitViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
-        stage = new Stage(viewport, game.getBatch());
-
-        backgroundTexture = new Texture(Gdx.files.internal("ui/gameGuideBackground.png"));
-
-        titleFont = game.getLargeFont();
-        contentFont = game.getMediumFont();
-
-        createMainMenu();
-        game.addInputProcessor(stage);
+        registerESC();
+        initializeStage();
+        background = new Texture(Gdx.files.internal("ui/gameGuideBackground.png"));
+        guideMenu();
     }
 
-    private void createMainMenu() {
-        mainMenu = new Table();
-        mainMenu.setFillParent(true);
+    private void guideMenu() {
+        table = new Table();
+        table.setFillParent(true);
+        stage.addActor(table);
 
         // Título
         Label.LabelStyle titleStyle = new Label.LabelStyle(titleFont, Color.GOLD);
         Label titleLabel = new Label("GUÍA DEL JUEGO", titleStyle);
-        mainMenu.add(titleLabel).padBottom(50).row();
 
         // Estilo de botones
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
@@ -75,63 +48,38 @@ public class GuideScreen implements Screen {
         buttonStyle.downFontColor = Color.YELLOW;
         buttonStyle.overFontColor = Color.YELLOW;
 
+        TextButton.TextButtonStyle buttonStyleBack = new TextButton.TextButtonStyle();
+        buttonStyleBack.font = contentFont;
+        buttonStyleBack.fontColor = Color.RED;
+        buttonStyleBack.downFontColor = Color.YELLOW;
+        buttonStyleBack.overFontColor = Color.YELLOW;
+
         // Botón HISTORIA
-        TextButton gameplayButton = createButton("HISTORIA", buttonStyle, () -> showStorySection());
-        mainMenu.add(gameplayButton).width(300).height(80).padBottom(30).row();
+        TextButton storyButton = createButton("HISTORIA", buttonStyle, () -> showStorySection());
 
         // Botón MOVIMIENTOS
-        TextButton enemiesButton = createButton("MOVIMIENTOS", buttonStyle, () -> showControlsSection());
-        mainMenu.add(enemiesButton).width(300).height(80).padBottom(30).row();
+        TextButton movementButton = createButton("MOVIMIENTOS", buttonStyle, () -> showControlsSection());
 
-        // Botón Volver
-        TextButton backButton = createButton("VOLVER AL MENÚ", buttonStyle, () -> {
+        // Botón VOLVER
+        TextButton exitButton = createButton("VOLVER", buttonStyleBack, () -> {
             game.removeInputProcessor(stage);
             game.setScreen(new IntroScreen(game));
         });
-        mainMenu.add(backButton).width(300).height(80).padTop(50).row();
 
-        stage.addActor(mainMenu);
-    }
-
-    private TextButton createButton(String text, TextButton.TextButtonStyle style, Runnable onClick) {
-        TextButton button = new TextButton(text, style);
-        button.setTransform(true);
-        button.setOrigin(Align.center);
-
-        // Efecto hover
-        button.addListener(new InputListener() {
-            @Override
-            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                button.clearActions();
-                button.addAction(Actions.scaleTo(1.2f, 1.2f, 0.2f, Interpolation.fade));
-                try {
-                    Gdx.audio.newSound(Gdx.files.internal("sounds/hover_sound.mp3")).play();
-                } catch (Exception e) {
-                    // Ignorar si no existe el sonido
-                }
-            }
-
-            @Override
-            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                button.clearActions();
-                button.addAction(Actions.scaleTo(1.0f, 1.0f, 0.2f, Interpolation.fade));
-            }
-        });
-
-        // Click
-        button.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                onClick.run();
-            }
-        });
-
-        return button;
+        table.center().padTop(100);
+        table.row();
+        table.add(titleLabel).padBottom(20);
+        table.row();
+        table.add(storyButton).padBottom(20);
+        table.row();
+        table.add(movementButton).padTop(10).padBottom(20);
+        table.row();
+        table.add(exitButton).padTop(10);
     }
 
     private void showStorySection() {
         showingSection = true;
-        mainMenu.setVisible(false);
+        table.setVisible(false);
 
         contentTable = new Table();
         contentTable.setFillParent(true);
@@ -162,11 +110,9 @@ public class GuideScreen implements Screen {
         stage.addActor(contentTable);
     }
 
-
-
     private void showControlsSection() {
         showingSection = true;
-        mainMenu.setVisible(false);
+        table.setVisible(false);
 
         contentTable = new Table();
         contentTable.setFillParent(true);
@@ -178,10 +124,10 @@ public class GuideScreen implements Screen {
 
         contentTable.add(new Label("MOVIMIENTOS", titleStyle)).padBottom(40).row();
         contentTable.add(new Label("Controles de Movimiento:", highlightStyle)).padBottom(20).row();
-        contentTable.add(new Label("- ↑/W: Mover arriba", contentStyle)).padBottom(10).row();
-        contentTable.add(new Label("- ↓/S: Mover abajo", contentStyle)).padBottom(10).row();
-        contentTable.add(new Label("- ←/A: Mover izquierda", contentStyle)).padBottom(10).row();
-        contentTable.add(new Label("- →/D: Mover derecha", contentStyle)).padBottom(30).row();
+        contentTable.add(new Label("- W: Mover arriba", contentStyle)).padBottom(10).row();
+        contentTable.add(new Label("- S: Mover abajo", contentStyle)).padBottom(10).row();
+        contentTable.add(new Label("- A: Mover izquierda", contentStyle)).padBottom(10).row();
+        contentTable.add(new Label("- D: Mover derecha", contentStyle)).padBottom(30).row();
 
         addBackButton(contentTable);
         stage.addActor(contentTable);
@@ -190,13 +136,13 @@ public class GuideScreen implements Screen {
     private void addBackButton(Table table) {
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
         buttonStyle.font = contentFont;
-        buttonStyle.fontColor = Color.YELLOW;
+        buttonStyle.fontColor = Color.RED;
         buttonStyle.overFontColor = Color.GOLD;
 
         TextButton backButton = createButton("VOLVER", buttonStyle, () -> {
             contentTable.remove();
             showingSection = false;
-            mainMenu.setVisible(true);
+            this.table.setVisible(true);
         });
 
         table.add(backButton).width(200).height(60).row();
@@ -205,14 +151,9 @@ public class GuideScreen implements Screen {
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
-
         camera.update();
-        game.getBatch().setProjectionMatrix(camera.combined);
 
-        game.getBatch().begin();
-        game.getBatch().draw(backgroundTexture, 0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        game.getBatch().end();
-
+        renderBackground();
         stage.act(delta);
         stage.draw();
     }
@@ -223,19 +164,12 @@ public class GuideScreen implements Screen {
     }
 
     @Override
-    public void pause() {}
-
-    @Override
-    public void resume() {}
-
-    @Override
     public void hide() {
-        game.removeInputProcessor(stage);
+        disposeStage();
     }
 
     @Override
     public void dispose() {
-        stage.dispose();
-        backgroundTexture.dispose();
+        super.dispose();
     }
 }

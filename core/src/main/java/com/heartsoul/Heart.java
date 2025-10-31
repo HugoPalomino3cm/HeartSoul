@@ -2,7 +2,6 @@ package com.heartsoul;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-//import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -34,18 +33,18 @@ public class Heart {
         float y =  spr.getY();
         if (!hit) {
             // Movimiento horizontal
-            if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.A)) {
                 xVel = -2;
-            } else if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            } else if (Gdx.input.isKeyPressed(Input.Keys.D)) {
                 xVel = 2;
             } else {
                 xVel = 0;
             }
 
             // Movimiento vertical
-            if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            if (Gdx.input.isKeyPressed(Input.Keys.S)) {
                 yVel = -2;
-            } else if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            } else if (Gdx.input.isKeyPressed(Input.Keys.W)) {
                 yVel = 2;
             } else {
                 yVel = 0;
