@@ -25,12 +25,10 @@ public class GameOverScreen extends BaseScreen {
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             stopMusic();
-            game.removeInputProcessor(stage);
             game.setScreen(new GameScreen(game, 1, 3, 0));
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             stopMusic();
-            game.removeInputProcessor(stage);
             game.setScreen(new IntroScreen(game));
         }
     }

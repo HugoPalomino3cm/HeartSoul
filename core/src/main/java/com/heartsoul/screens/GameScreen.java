@@ -21,9 +21,13 @@ public class GameScreen extends BaseScreen {
     private final Heart heart;
     private final ShapeRenderer shapeRenderer;
     private final List<Projectile> projectiles = new ArrayList<>();
-    private final Texture bulletTx = new Texture(Gdx.files.internal("ui/bullet.png"));
-    private Texture lifeIconTexture;
 
+    // Texturas
+    private Texture bulletTx;
+    private Texture bombTx;
+    private Texture lifeTx;
+
+    // Header info
     private String powerUp = "NINGUNO";
     private int timerSeconds = 45;
     private float timerAccumulator = 0f;
@@ -89,7 +93,7 @@ public class GameScreen extends BaseScreen {
         for (int i = 0; i < heart.getLives(); i++) {
             // Usamos el método draw() que escala la imagen
             batch.draw(
-                lifeIconTexture,
+                lifeTx,
                 startX + i * (iconWidth + iconPadding), // Usamos iconPadding
                 iconY,
                 iconWidth,
@@ -127,28 +131,39 @@ public class GameScreen extends BaseScreen {
     // Método para generar proyectiles cada 2 segundos
     private void spawnProjectiles(float delta) {
         spawnTimer += delta;
-
-        // Intervalo aleatorio entre 0.5 y 3 segundos
         float randomInterval = MathUtils.random(0.5f, 3f);
 
         if (spawnTimer >= randomInterval) {
             spawnTimer = 0f;
 
-            // Crea el bullet usando el constructor con randomX y Y arriba
-            Bullet bullet = new Bullet(
-                VIRTUAL_WIDTH,
-                VIRTUAL_HEIGHT,
-                bulletTx
-            );
-            projectiles.add(bullet);
+            if (MathUtils.randomBoolean(0.5f)) {
+                // Genera Bullet
+                Bullet bullet = new Bullet(
+                    VIRTUAL_WIDTH,
+                    VIRTUAL_HEIGHT,
+                    bulletTx
+                );
+                projectiles.add(bullet);
+            } else {
+                // Genera Bomb en posición aleatoria y velocidad aleatoria
+                float x = MathUtils.random(0, VIRTUAL_WIDTH - 20);
+                float y = MathUtils.random(0, VIRTUAL_HEIGHT - 20);
+                float xVel = MathUtils.random(-4f, 4f);
+                float yVel = MathUtils.random(-4f, 4f);
+                Bomb bomb = new Bomb((int)x, (int)y, bombTx, xVel, yVel);
+                projectiles.add(bomb);
+            }
         }
     }
+
 
     @Override
     public void show() {
         registerESC();
-        background = new Texture(Gdx.files.internal("ui/gameGuideBackground.png"));
-        lifeIconTexture = new Texture(Gdx.files.internal("ui/life.png"));
+        setBackground(new Texture(Gdx.files.internal("ui/gameGuideBackground.png")));
+        bulletTx = new Texture(Gdx.files.internal("ui/bullet.png"));
+        bombTx = new Texture(Gdx.files.internal("ui/bomb.png"));
+        lifeTx = new Texture(Gdx.files.internal("ui/life.png"));
     }
 
     // Lineas de contorno que limitan el movimiento del jugar
@@ -199,7 +214,7 @@ public class GameScreen extends BaseScreen {
         // Fondo
         Color oldColor = batch.getColor();
         batch.setColor(1f, 1f, 1f, 0.6f);
-        batch.draw(background, 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        renderBackground();
         batch.setColor(oldColor);
 
         header();
@@ -210,7 +225,7 @@ public class GameScreen extends BaseScreen {
 
         // Actualizar y dibujar proyectiles
         for (Projectile projectile : projectiles) {
-            projectile.update();
+            projectile.update(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
             projectile.checkBounds(this);
 
             // Verificar colisión con Heart
@@ -229,7 +244,7 @@ public class GameScreen extends BaseScreen {
         if (heart.isDead()) {
             if (score > game.getHighScore())
                 game.setHighScore(score);
-            game.removeInputProcessor(stage);
+            unregisterESC(); // Ya no se accede a stage directamente
             game.setScreen(new GameOverScreen(game));
         }
         batch.end();
@@ -244,5 +259,9 @@ public class GameScreen extends BaseScreen {
         if (bulletTx != null) {
             bulletTx.dispose();
         }
+        if (bombTx != null) {
+            bombTx.dispose();
+        }
+
     }
 }

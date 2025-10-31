@@ -8,7 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.heartsoul.Main;
 
-
 /** First screen of the application. Displayed after the application is created. */
 public class IntroScreen extends BaseScreen {
     private Texture title;
@@ -20,7 +19,8 @@ public class IntroScreen extends BaseScreen {
 
     @Override
     public void show() {
-        background = new Texture(Gdx.files.internal("ui/background.png"));
+        batch.setColor(1f, 1f, 1f, 1f);
+        setBackground(new Texture(Gdx.files.internal("ui/background.png")));
         title = new Texture(Gdx.files.internal("ui/title.png"));
 
         // Crear el menú
@@ -28,7 +28,7 @@ public class IntroScreen extends BaseScreen {
 
         Table table = new Table();
         table.setFillParent(true);
-        stage.addActor(table);
+        getStage().addActor(table);
 
         playMusic("sounds/background_music.mp3", true);
 
@@ -41,14 +41,12 @@ public class IntroScreen extends BaseScreen {
         // Botón JUGAR
         TextButton playButton = createButton("JUGAR", buttonStyle, () -> {
             stopMusic();
-            game.removeInputProcessor(stage);
             game.setScreen(new GameScreen(game, 1, 3, 0));
         });
 
         // Botón GUÍA
         TextButton guideButton = createButton("GUÍA", buttonStyle, () -> {
             stopMusic();
-            game.removeInputProcessor(stage);
             game.setScreen(new GuideScreen(game));
         });
 
@@ -89,8 +87,8 @@ public class IntroScreen extends BaseScreen {
         batch.end();
 
         // UI
-        stage.act(delta);
-        stage.draw();
+        getStage().act(delta);
+        getStage().draw();
     }
 
     @Override

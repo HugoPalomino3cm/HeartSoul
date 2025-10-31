@@ -27,10 +27,10 @@ public abstract class BaseScreen implements Screen {
     protected OrthographicCamera camera;
     protected Viewport viewport;
     protected SpriteBatch batch;
-    protected Texture background;
-    protected Music bgMusic;
-    protected Stage stage;
-    protected InputAdapter escListener;
+    private Texture background;
+    private Music bgMusic;
+    private Stage stage;
+    private InputAdapter escListener;
 
     protected static final int VIRTUAL_WIDTH = 1920;
     protected static final int VIRTUAL_HEIGHT = 1080;
@@ -190,6 +190,14 @@ public abstract class BaseScreen implements Screen {
             background.dispose();
             background = null;
         }
+    }
+
+    protected void setBackground(Texture background) {
+        this.background = background;
+    }
+
+    protected Stage getStage() {
+        return stage;
     }
 
     public Main getGame() {

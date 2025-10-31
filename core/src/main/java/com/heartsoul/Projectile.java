@@ -15,13 +15,12 @@ public abstract class Projectile extends Entity {
 
     @Override
     public void draw(SpriteBatch batch, GameScreen game) {
-        if (!dead) {
+        if (!isDead()) {
             super.draw(batch, game);
         }
     }
 
-    @Override
-    public void update() {
+    public void update(int virtualWidth, int virtualHeight) {
         setPosition(getX() + xVel, getY() + yVel);
 
         // Si sale de los límites de la pantalla, lo marcamos como muerto
@@ -37,12 +36,12 @@ public abstract class Projectile extends Entity {
 
         if (getX() + getWidth() < 0 || getX() > maxW ||
             getY() + getHeight() < 0 || getY() > maxH) {
-            dead = true;
+            setDead(true);
         }
     }
 
     // Destruir el proyectil al colisionar
     public void onCollision() {
-        dead = true;
+        setDead(true);
     }
 }

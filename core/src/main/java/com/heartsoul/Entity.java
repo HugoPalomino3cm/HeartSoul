@@ -8,8 +8,8 @@ import com.heartsoul.screens.GameScreen;
 
 public abstract class Entity {
     private Sprite spr;
-    protected int lives;
-    protected boolean dead = false;
+    private int lives;
+    private boolean dead = false;
 
     public Entity(int x, int y, Texture tx, int size, int lives) {
         this.lives = lives;
@@ -33,10 +33,12 @@ public abstract class Entity {
         spr.draw(batch);
     }
 
-    public abstract void update();
+    public void update(int virtualWidth, int virtualHeight) {}
 
     public boolean isDead() { return dead; }
     public int getLives() { return lives; }
+
+    public void setDead(boolean dead) { this.dead = dead; }
 
     public float getX() { return spr.getX(); }
     public float getY() { return spr.getY(); }
@@ -45,4 +47,8 @@ public abstract class Entity {
     public void setPosition(float x, float y) { spr.setPosition(x, y); }
     public Rectangle getBoundingRectangle() { return spr.getBoundingRectangle(); }
     public void setLives(int lives) { this.lives = lives; }
+
+    public void setSpeedMultiplier(float speedMultiplier) {
+        // Por defecto, no hace nada
+    }
 }

@@ -7,6 +7,7 @@ sounds/game_over.mp3
 sounds/hitSound.mp3
 sounds/hover_sound.mp3
 ui/background.png
+ui/bomb.png
 ui/bullet.png
 ui/gameGuideBackground.png
 ui/heart.png

@@ -29,14 +29,14 @@ public class GuideScreen extends BaseScreen {
     public void show() {
         registerESC();
         initializeStage();
-        background = new Texture(Gdx.files.internal("ui/gameGuideBackground.png"));
+        setBackground(new Texture(Gdx.files.internal("ui/gameGuideBackground.png")));
         guideMenu();
     }
 
     private void guideMenu() {
         table = new Table();
         table.setFillParent(true);
-        stage.addActor(table);
+        getStage().addActor(table);
 
         // Título
         Label.LabelStyle titleStyle = new Label.LabelStyle(titleFont, Color.GOLD);
@@ -63,7 +63,7 @@ public class GuideScreen extends BaseScreen {
 
         // Botón VOLVER
         TextButton exitButton = createButton("VOLVER", buttonStyleBack, () -> {
-            game.removeInputProcessor(stage);
+            unregisterESC();
             game.setScreen(new IntroScreen(game));
         });
 
@@ -108,7 +108,7 @@ public class GuideScreen extends BaseScreen {
         contentTable.add(new Label("Esquiva las balas y sobrevive", contentStyle)).padBottom(15).row();
 
         addBackButton(contentTable);
-        stage.addActor(contentTable);
+        getStage().addActor(contentTable);
     }
 
     private void showControlsSection() {
@@ -131,7 +131,7 @@ public class GuideScreen extends BaseScreen {
         contentTable.add(new Label("- D: Mover derecha", contentStyle)).padBottom(30).row();
 
         addBackButton(contentTable);
-        stage.addActor(contentTable);
+        getStage().addActor(contentTable);
     }
 
     private void addBackButton(Table table) {
@@ -155,8 +155,8 @@ public class GuideScreen extends BaseScreen {
         camera.update();
 
         renderBackground();
-        stage.act(delta);
-        stage.draw();
+        getStage().act(delta);
+        getStage().draw();
     }
 
     @Override
