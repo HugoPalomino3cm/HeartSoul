@@ -2,7 +2,7 @@
 
 
 ¡Bienvenido a **HeartSoul**!  
-En este juego eres **un valiente corazón** ❤️ que debe enfrentarse y sobrevivir a las almas que intentan acabar con tu vida 👻🖤.  
+En este juego eres **corazón** ❤️ que debe enfrentarse y sobrevivir a las almas que intentan acabar con tu vida 👻🖤.  
 Utiliza tus reflejos, poderes y astucia para esquivar los ataques y resistir la mayor cantidad de rondas posibles.
 
 ---
@@ -17,8 +17,7 @@ Utiliza tus reflejos, poderes y astucia para esquivar los ataques y resistir la 
 3. **Compila y ejecuta:**  
    - Abre una terminal en la carpeta raíz del proyecto y ejecuta:
    ```bash
-   javac -d bin src/*.java
-   java -cp bin Lwjgl3Launcher
+   .\gradlew build
    ```
 
    ---
