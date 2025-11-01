@@ -1,63 +1,86 @@
 package com.heartsoul.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.heartsoul.Main;
+import com.heartsoul.SoundManager;
 
 /** First screen of the application. Displayed after the application is created. */
 public class IntroScreen extends BaseScreen {
+    private float elapsedTime;
+    private boolean isMuted = false;
+
+    // Texturas
     private Texture title;
-    private float elapsedTime = 0f;
+    private Texture muteOn, muteOff;
+
+    // Posición y tamaño del botón de mute
+    private float muteSize;
+    private float muteX;
+    private float muteY;
+
+    // InputAdapter para el botón de mute
+    private InputAdapter muteButtonListener;
 
     public IntroScreen(Main game) {
         super(game);
+        this.elapsedTime = 0f;
     }
 
     @Override
     public void show() {
-        batch.setColor(1f, 1f, 1f, 1f);
+        this.batch.setColor(1f, 1f, 1f, 1f);
         setBackground(new Texture(Gdx.files.internal("ui/background.png")));
         title = new Texture(Gdx.files.internal("ui/title.png"));
+        muteOn = new Texture(Gdx.files.internal("ui/music-on.png"));
+        muteOff = new Texture(Gdx.files.internal("ui/music-off.png"));
 
-        // Crear el menú
+        // Inicializar posición y tamaño del botón de mute
+        muteSize = 64;
+        muteX = getVirtualWidth() - muteSize - 32;
+        muteY = getVirtualHeight() - muteSize - 32;
+
+        // Cambiar a la música de fondo (respetando el estado de pausa)
+        SoundManager.getInstance().playMusic("sounds/background_music.mp3", 100);
+
+        // Sincronizar el estado de mute con el SoundManager DESPUÉS de cambiar la música
+        this.isMuted = SoundManager.getInstance().isMusicPaused();
+
+        // Crear el menú primero
         initializeStage();
 
         Table table = new Table();
         table.setFillParent(true);
         getStage().addActor(table);
 
-        playMusic("sounds/background_music.mp3", true);
-
         // Crear estilos para los elementos de UI
         Label.LabelStyle labelStyle = new Label.LabelStyle();
-        labelStyle.font = game.getLargeFont();
+        labelStyle.font = this.game.getLargeFont();
+
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
-        buttonStyle.font = game.getLargeFont();
+        buttonStyle.font = this.game.getLargeFont();
 
         // Botón JUGAR
         TextButton playButton = createButton("JUGAR", buttonStyle, () -> {
-            stopMusic();
-            game.setScreen(new GameScreen(game, 1, 3, 0));
+            this.game.setScreen(new GameScreen(this.game, 1, 3, 0));
         });
 
         // Botón GUÍA
         TextButton guideButton = createButton("GUÍA", buttonStyle, () -> {
-            stopMusic();
-            game.setScreen(new GuideScreen(game));
+            this.game.setScreen(new GuideScreen(this.game));
         });
 
         // Botón SALIR
         TextButton exitButton = createButton("SALIR", buttonStyle, () -> {
-            stopMusic();
             Gdx.app.exit();
         });
 
-        // Añadir los botones en dos filas y bajar su posición para que no se sobrepongan con el título
-        // padTop mueve el contenido hacia abajo dentro de la pantalla virtual
+        // Añadir los botones
         table.center().padTop(380);
         table.row();
         table.add(playButton).padBottom(20);
@@ -65,28 +88,61 @@ public class IntroScreen extends BaseScreen {
         table.add(guideButton).padTop(10).padBottom(20);
         table.row();
         table.add(exitButton).padTop(10);
+
+        // Crear y registrar el InputAdapter para el botón de silencio
+        this.muteButtonListener = new InputAdapter() {
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                // Convertir coordenadas de pantalla a coordenadas del viewport usando unproject
+                com.badlogic.gdx.math.Vector3 touchPos = new com.badlogic.gdx.math.Vector3(screenX, screenY, 0);
+                viewport.unproject(touchPos);
+
+                float mouseX = touchPos.x;
+                float mouseY = touchPos.y;
+
+                if (mouseX >= muteX && mouseX <= muteX + muteSize &&
+                    mouseY >= muteY && mouseY <= muteY + muteSize) {
+                    isMuted = !isMuted;
+                    if (isMuted) {
+                        SoundManager.getInstance().pauseMusic();
+                    } else {
+                        SoundManager.getInstance().resumeMusic();
+                    }
+                    return true; // Evento consumido
+                }
+                return false; // Dejar pasar el evento
+            }
+        };
+        this.game.addInputProcessor(this.muteButtonListener);
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
 
-        elapsedTime += delta;
+        this.elapsedTime += delta;
         float amplitude = 20f; // altura máxima del movimiento
-        float baseY = viewport.getWorldHeight() - title.getHeight();
-        float offsetY = (float) Math.sin(elapsedTime * 2) * amplitude;
+        float baseY = this.viewport.getWorldHeight() - this.title.getHeight();
+        float offsetY = (float) Math.sin(this.elapsedTime * 2) * amplitude;
         float titleY = baseY + offsetY;
-        float titleX = (viewport.getWorldWidth() - title.getWidth()) / 2f;
+        float titleX = (this.viewport.getWorldWidth() - this.title.getWidth()) / 2f;
 
         // Fondo
         renderBackground();
 
-        // Letras HeartSoul
-        batch.begin();
-        batch.draw(title, titleX, titleY);
-        batch.end();
+        // Dibujar todo en un solo batch
+        this.batch.begin();
 
-        // UI
+        // Letras HeartSoul
+        this.batch.draw(this.title, titleX, titleY);
+
+        // Botón de mute
+        Texture currentMuteTexture = isMuted ? muteOff : muteOn;
+        this.batch.draw(currentMuteTexture, muteX, muteY, muteSize, muteSize);
+
+        this.batch.end();
+
+        // UI (botones del menú)
         getStage().act(delta);
         getStage().draw();
     }
@@ -94,8 +150,19 @@ public class IntroScreen extends BaseScreen {
     @Override
     public void dispose() {
         super.dispose();
-        if (title != null) {
-            title.dispose();
+        if (this.muteButtonListener != null) {
+            this.game.removeInputProcessor(this.muteButtonListener);
+            this.muteButtonListener = null;
+        }
+        if (this.title != null) {
+            this.title.dispose();
+        }
+        if (this.muteOn != null) {
+            this.muteOn.dispose();
+        }
+        if (this.muteOff != null) {
+            this.muteOff.dispose();
         }
     }
 }
+

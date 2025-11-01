@@ -1,42 +1,54 @@
-package com.heartsoul;
+package com.heartsoul.entities;
 
 import com.badlogic.gdx.graphics.Texture;
 
 public class Bomb extends Projectile {
     private static final int SIZE = 100;
     private static final float LIFETIME = 10f; // segundos
-    private float life = 0f;
+    private static final float DELTA_TIME = 1f / 60f; // asumiendo 60 FPS
+
+    private float lifeTime;
 
     public Bomb(int x, int y, Texture tx, float xVel, float yVel) {
         super(x, y, tx, SIZE, xVel, yVel);
+        this.lifeTime = 0f;
     }
 
     @Override
     public void update(int virtualWidth, int virtualHeight) {
         super.update(virtualWidth, virtualHeight); // mueve la bomba según la velocidad
 
-        float minX = 0, minY = 0;
+        float minX = 0;
+        float minY = 0;
         float maxX = virtualWidth - getWidth();
         float maxY = virtualHeight - getHeight();
 
-        // Lógica extra: rebote y tiempo de vida
+        // Lógica extra: rebote
         if (getX() < minX) {
             setPosition(minX, getY());
-            xVel = -xVel;
+            setXVelocity(-getXVelocity());
         } else if (getX() > maxX) {
             setPosition(maxX, getY());
-            xVel = -xVel;
+            setXVelocity(-getXVelocity());
         }
 
         if (getY() < minY) {
             setPosition(getX(), minY);
-            yVel = -yVel;
+            setYVelocity(-getYVelocity());
         } else if (getY() > maxY) {
             setPosition(getX(), maxY);
-
-
-            life += 1f / 60f; // o usa un delta real si lo tienes
-            if (life > LIFETIME) setDead(true);
+            setYVelocity(-getYVelocity());
         }
+
+        // Tiempo de vida
+        this.lifeTime += DELTA_TIME;
+        if (this.lifeTime > LIFETIME) {
+            setDead(true);
+        }
+    }
+
+    // Getter para tiempo de vida
+    public float getLifeTime() {
+        return this.lifeTime;
     }
 }

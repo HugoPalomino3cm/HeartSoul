@@ -12,17 +12,18 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.heartsoul.Main;
 
 public class GuideScreen extends BaseScreen {
-    private BitmapFont titleFont;
-    private BitmapFont contentFont;
+    private final BitmapFont titleFont;
+    private final BitmapFont contentFont;
 
     private Table table;
     private Table contentTable;
-    private boolean showingSection = false;
+    private boolean showingSection;
 
     public GuideScreen(Main game) {
         super(game);
-        titleFont = game.getLargeFont();
-        contentFont = game.getMediumFont();
+        this.titleFont = game.getLargeFont();
+        this.contentFont = game.getMediumFont();
+        this.showingSection = false;
     }
 
     @Override
@@ -34,23 +35,23 @@ public class GuideScreen extends BaseScreen {
     }
 
     private void guideMenu() {
-        table = new Table();
-        table.setFillParent(true);
-        getStage().addActor(table);
+        this.table = new Table();
+        this.table.setFillParent(true);
+        getStage().addActor(this.table);
 
         // Título
-        Label.LabelStyle titleStyle = new Label.LabelStyle(titleFont, Color.GOLD);
+        Label.LabelStyle titleStyle = new Label.LabelStyle(this.titleFont, Color.GOLD);
         Label titleLabel = new Label("GUÍA DEL JUEGO", titleStyle);
 
         // Estilo de botones
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
-        buttonStyle.font = contentFont;
+        buttonStyle.font = this.contentFont;
         buttonStyle.fontColor = Color.CYAN;
         buttonStyle.downFontColor = Color.YELLOW;
         buttonStyle.overFontColor = Color.YELLOW;
 
         TextButton.TextButtonStyle buttonStyleBack = new TextButton.TextButtonStyle();
-        buttonStyleBack.font = contentFont;
+        buttonStyleBack.font = this.contentFont;
         buttonStyleBack.fontColor = Color.RED;
         buttonStyleBack.downFontColor = Color.YELLOW;
         buttonStyleBack.overFontColor = Color.YELLOW;
@@ -64,35 +65,35 @@ public class GuideScreen extends BaseScreen {
         // Botón VOLVER
         TextButton exitButton = createButton("VOLVER", buttonStyleBack, () -> {
             unregisterESC();
-            game.setScreen(new IntroScreen(game));
+            this.game.setScreen(new IntroScreen(this.game));
         });
 
-        table.center().padTop(100);
-        table.row();
-        table.add(titleLabel).padBottom(20);
-        table.row();
-        table.add(storyButton).padBottom(20);
-        table.row();
-        table.add(movementButton).padTop(10).padBottom(20);
-        table.row();
-        table.add(exitButton).padTop(10);
+        this.table.center().padTop(100);
+        this.table.row();
+        this.table.add(titleLabel).padBottom(20);
+        this.table.row();
+        this.table.add(storyButton).padBottom(20);
+        this.table.row();
+        this.table.add(movementButton).padTop(10).padBottom(20);
+        this.table.row();
+        this.table.add(exitButton).padTop(10);
     }
 
     private void showStorySection() {
-        showingSection = true;
-        table.setVisible(false);
+        this.showingSection = true;
+        this.table.setVisible(false);
 
-        contentTable = new Table();
-        contentTable.setFillParent(true);
-        contentTable.pad(80, 150, 80, 150);
+        this.contentTable = new Table();
+        this.contentTable.setFillParent(true);
+        this.contentTable.pad(80, 150, 80, 150);
 
-        Label.LabelStyle titleStyle = new Label.LabelStyle(titleFont, Color.GOLD);
-        Label.LabelStyle contentStyle = new Label.LabelStyle(contentFont, Color.WHITE);
-        Label.LabelStyle highlightStyle = new Label.LabelStyle(contentFont, Color.CYAN);
+        Label.LabelStyle titleStyle = new Label.LabelStyle(this.titleFont, Color.GOLD);
+        Label.LabelStyle contentStyle = new Label.LabelStyle(this.contentFont, Color.WHITE);
+        Label.LabelStyle highlightStyle = new Label.LabelStyle(this.contentFont, Color.CYAN);
 
-        contentTable.add(new Label("HISTORIA", titleStyle)).padBottom(40).row();
+        this.contentTable.add(new Label("HISTORIA", titleStyle)).padBottom(40).row();
 
-        contentTable.add(new Label("El Corazón Valiente:", highlightStyle)).padBottom(20).row();
+        this.contentTable.add(new Label("El Corazón Valiente:", highlightStyle)).padBottom(20).row();
 
         Label storyText = new Label(
             "En un mundo dividido entre luz y oscuridad,\n" +
@@ -102,47 +103,47 @@ public class GuideScreen extends BaseScreen {
         );
         storyText.setWrap(true);
         storyText.setAlignment(Align.center);
-        contentTable.add(storyText).width(600).padBottom(30).row();
+        this.contentTable.add(storyText).width(600).padBottom(30).row();
 
-        contentTable.add(new Label("Tu Misión:", highlightStyle)).padBottom(20).row();
-        contentTable.add(new Label("Esquiva las balas y sobrevive", contentStyle)).padBottom(15).row();
+        this.contentTable.add(new Label("Tu Misión:", highlightStyle)).padBottom(20).row();
+        this.contentTable.add(new Label("Esquiva las balas y sobrevive", contentStyle)).padBottom(15).row();
 
-        addBackButton(contentTable);
-        getStage().addActor(contentTable);
+        addBackButton(this.contentTable);
+        getStage().addActor(this.contentTable);
     }
 
     private void showControlsSection() {
-        showingSection = true;
-        table.setVisible(false);
+        this.showingSection = true;
+        this.table.setVisible(false);
 
-        contentTable = new Table();
-        contentTable.setFillParent(true);
-        contentTable.pad(50, 100, 50, 100);
+        this.contentTable = new Table();
+        this.contentTable.setFillParent(true);
+        this.contentTable.pad(50, 100, 50, 100);
 
-        Label.LabelStyle titleStyle = new Label.LabelStyle(titleFont, Color.GOLD);
-        Label.LabelStyle contentStyle = new Label.LabelStyle(contentFont, Color.WHITE);
-        Label.LabelStyle highlightStyle = new Label.LabelStyle(contentFont, Color.CYAN);
+        Label.LabelStyle titleStyle = new Label.LabelStyle(this.titleFont, Color.GOLD);
+        Label.LabelStyle contentStyle = new Label.LabelStyle(this.contentFont, Color.WHITE);
+        Label.LabelStyle highlightStyle = new Label.LabelStyle(this.contentFont, Color.CYAN);
 
-        contentTable.add(new Label("MOVIMIENTOS", titleStyle)).padBottom(40).row();
-        contentTable.add(new Label("Controles de Movimiento:", highlightStyle)).padBottom(20).row();
-        contentTable.add(new Label("- W: Mover arriba", contentStyle)).padBottom(10).row();
-        contentTable.add(new Label("- S: Mover abajo", contentStyle)).padBottom(10).row();
-        contentTable.add(new Label("- A: Mover izquierda", contentStyle)).padBottom(10).row();
-        contentTable.add(new Label("- D: Mover derecha", contentStyle)).padBottom(30).row();
+        this.contentTable.add(new Label("MOVIMIENTOS", titleStyle)).padBottom(40).row();
+        this.contentTable.add(new Label("Controles de Movimiento:", highlightStyle)).padBottom(20).row();
+        this.contentTable.add(new Label("- W: Mover arriba", contentStyle)).padBottom(10).row();
+        this.contentTable.add(new Label("- S: Mover abajo", contentStyle)).padBottom(10).row();
+        this.contentTable.add(new Label("- A: Mover izquierda", contentStyle)).padBottom(10).row();
+        this.contentTable.add(new Label("- D: Mover derecha", contentStyle)).padBottom(30).row();
 
-        addBackButton(contentTable);
-        getStage().addActor(contentTable);
+        addBackButton(this.contentTable);
+        getStage().addActor(this.contentTable);
     }
 
     private void addBackButton(Table table) {
         TextButton.TextButtonStyle buttonStyle = new TextButton.TextButtonStyle();
-        buttonStyle.font = contentFont;
+        buttonStyle.font = this.contentFont;
         buttonStyle.fontColor = Color.RED;
         buttonStyle.overFontColor = Color.GOLD;
 
         TextButton backButton = createButton("VOLVER", buttonStyle, () -> {
-            contentTable.remove();
-            showingSection = false;
+            this.contentTable.remove();
+            this.showingSection = false;
             this.table.setVisible(true);
         });
 
@@ -152,7 +153,7 @@ public class GuideScreen extends BaseScreen {
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
-        camera.update();
+        this.camera.update();
 
         renderBackground();
         getStage().act(delta);
@@ -161,7 +162,7 @@ public class GuideScreen extends BaseScreen {
 
     @Override
     public void resize(int width, int height) {
-        viewport.update(width, height, true);
+        this.viewport.update(width, height, true);
     }
 
     @Override
@@ -174,3 +175,4 @@ public class GuideScreen extends BaseScreen {
         super.dispose();
     }
 }
+

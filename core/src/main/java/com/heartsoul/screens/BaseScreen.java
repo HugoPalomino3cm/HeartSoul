@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -21,21 +20,23 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.heartsoul.Main;
+import com.heartsoul.SoundManager;
 
 public abstract class BaseScreen implements Screen {
+    private static final int VIRTUAL_WIDTH = 1920;
+    private static final int VIRTUAL_HEIGHT = 1080;
+    private static final int BOTTOM_UI_HEIGHT = 40;
+    private static final int TOP_UI_HEIGHT = 100;
+
     protected final Main game;
     protected OrthographicCamera camera;
     protected Viewport viewport;
     protected SpriteBatch batch;
+
     private Texture background;
-    private Music bgMusic;
     private Stage stage;
     private InputAdapter escListener;
 
-    protected static final int VIRTUAL_WIDTH = 1920;
-    protected static final int VIRTUAL_HEIGHT = 1080;
-    protected static final int BOTTOM_UI_HEIGHT = 40;
-    protected static final int TOP_UI_HEIGHT = 100;
 
     public BaseScreen(Main game) {
         this.game = game;
@@ -44,9 +45,9 @@ public abstract class BaseScreen implements Screen {
     }
 
     protected void initializeCamera(float width, float height) {
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, width, height);
-        viewport = new FitViewport(width, height, camera);
+        this.camera = new OrthographicCamera();
+        this.camera.setToOrtho(false, width, height);
+        this.viewport = new FitViewport(width, height, this.camera);
     }
 
     @Override
@@ -56,49 +57,30 @@ public abstract class BaseScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        if (viewport != null) {
-            viewport.update(width, height, true);
+        if (this.viewport != null) {
+            this.viewport.update(width, height, true);
         }
     }
 
     protected void renderBackground() {
-        if (background != null) {
-            batch.setProjectionMatrix(camera.combined);
-            batch.begin();
-            batch.draw(background, 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
-            batch.end();
-        }
-    }
-
-    protected void playMusic(String path, boolean loop) {
-        stopMusic();
-        try {
-            bgMusic = Gdx.audio.newMusic(Gdx.files.internal(path));
-            bgMusic.setLooping(loop);
-            bgMusic.play();
-        } catch (Exception e) {
-            Gdx.app.error("BaseScreen", "Error en cargar la música: " + path);
-        }
-    }
-
-    protected void stopMusic() {
-        if (bgMusic != null) {
-            bgMusic.stop();
-            bgMusic.dispose();
-            bgMusic = null;
+        if (this.background != null) {
+            this.batch.setProjectionMatrix(this.camera.combined);
+            this.batch.begin();
+            this.batch.draw(this.background, 0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+            this.batch.end();
         }
     }
 
     protected void initializeStage() {
-        stage = new Stage(viewport, batch);
-        game.addInputProcessor(stage);
+        this.stage = new Stage(this.viewport, this.batch);
+        this.game.addInputProcessor(this.stage);
     }
 
     protected void disposeStage() {
-        if (stage != null) {
-            game.removeInputProcessor(stage);
-            stage.dispose();
-            stage = null;
+        if (this.stage != null) {
+            this.game.removeInputProcessor(this.stage);
+            this.stage.dispose();
+            this.stage = null;
         }
     }
 
@@ -108,7 +90,7 @@ public abstract class BaseScreen implements Screen {
     }
 
     protected void registerESC() {
-        escListener = new InputAdapter() {
+        this.escListener = new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
                 if (keycode == Input.Keys.ESCAPE) {
@@ -118,13 +100,13 @@ public abstract class BaseScreen implements Screen {
                 return false;
             }
         };
-        game.addInputProcessor(escListener);
+        this.game.addInputProcessor(this.escListener);
     }
 
     protected void unregisterESC() {
-        if (escListener != null) {
-            game.removeInputProcessor(escListener);
-            escListener = null;
+        if (this.escListener != null) {
+            this.game.removeInputProcessor(this.escListener);
+            this.escListener = null;
         }
     }
 
@@ -139,11 +121,7 @@ public abstract class BaseScreen implements Screen {
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
                 button.clearActions();
                 button.addAction(Actions.scaleTo(1.2f, 1.2f, 0.2f, Interpolation.fade));
-                try {
-                    Gdx.audio.newSound(Gdx.files.internal("sounds/hover_sound.mp3")).play();
-                } catch (Exception e) {
-                    // Ignorar si no existe el sonido
-                }
+                SoundManager.getInstance().playSound("sounds/hover.mp3");
             }
 
             @Override
@@ -176,19 +154,17 @@ public abstract class BaseScreen implements Screen {
 
     @Override
     public void hide() {
-        stopMusic();
         disposeStage();
         unregisterESC();
     }
 
     @Override
     public void dispose() {
-        stopMusic();
         disposeStage();
         unregisterESC();
-        if (background != null) {
-            background.dispose();
-            background = null;
+        if (this.background != null) {
+            this.background.dispose();
+            this.background = null;
         }
     }
 
@@ -197,11 +173,11 @@ public abstract class BaseScreen implements Screen {
     }
 
     protected Stage getStage() {
-        return stage;
+        return this.stage;
     }
 
     public Main getGame() {
-        return game;
+        return this.game;
     }
 
     public int getVirtualWidth() {

@@ -1,16 +1,17 @@
-package com.heartsoul;
+package com.heartsoul.entities;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.Texture;
 import com.heartsoul.screens.GameScreen;
 
 public abstract class Projectile extends Entity {
-    protected float xVel, yVel;
+    private float xVelocity;
+    private float yVelocity;
 
     public Projectile(int x, int y, Texture tx, int size, float xVel, float yVel) {
         super(x, y, tx, size, 1); // normalmente un proyectil tiene 1 vida
-        this.xVel = xVel;
-        this.yVel = yVel;
+        this.xVelocity = xVel;
+        this.yVelocity = yVel;
     }
 
     @Override
@@ -20,16 +21,14 @@ public abstract class Projectile extends Entity {
         }
     }
 
+    @Override
     public void update(int virtualWidth, int virtualHeight) {
-        setPosition(getX() + xVel, getY() + yVel);
-
-        // Si sale de los límites de la pantalla, lo marcamos como muerto
-        // (Obtén el GameScreen de contexto donde uses update si necesitas los límites)
-        // Aquí se asume que tienes acceso a los límites de pantalla de alguna manera
-        // Si necesitas el GameScreen, cambia la firma a update(GameScreen game)
+        setPosition(getX() + this.xVelocity, getY() + this.yVelocity);
     }
 
-    // Método para verificar si sale de pantalla, llámalo desde el GameScreen o desde update si pasas GameScreen
+    /**
+     * Método para verificar si el proyectil sale de pantalla
+     */
     public void checkBounds(GameScreen game) {
         int maxW = game.getVirtualWidth();
         int maxH = game.getVirtualHeight();
@@ -40,8 +39,28 @@ public abstract class Projectile extends Entity {
         }
     }
 
-    // Destruir el proyectil al colisionar
+    /**
+     * Destruir el proyectil al colisionar
+     */
     public void onCollision() {
         setDead(true);
+    }
+
+    // Getters
+    protected float getXVelocity() {
+        return this.xVelocity;
+    }
+
+    protected float getYVelocity() {
+        return this.yVelocity;
+    }
+
+    // Setters
+    protected void setXVelocity(float xVelocity) {
+        this.xVelocity = xVelocity;
+    }
+
+    protected void setYVelocity(float yVelocity) {
+        this.yVelocity = yVelocity;
     }
 }

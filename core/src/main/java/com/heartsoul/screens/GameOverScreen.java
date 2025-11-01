@@ -3,6 +3,7 @@ package com.heartsoul.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.heartsoul.Main;
+import com.heartsoul.SoundManager;
 
 public class GameOverScreen extends BaseScreen {
     public GameOverScreen(Main game) {
@@ -13,27 +14,27 @@ public class GameOverScreen extends BaseScreen {
     public void render(float delta) {
         clearScreen();
 
-        camera.update();
-        game.getBatch().setProjectionMatrix(camera.combined);
+        this.camera.update();
+        this.game.getBatch().setProjectionMatrix(this.camera.combined);
 
-        game.getBatch().begin();
-        game.getMediumFont().draw(game.getBatch(), "Game Over !!! ", 120, 400, 400, 1, true);
-        game.getMediumFont().draw(game.getBatch(), "Apreta ESPACIO para reiniciar", 100, 300);
-        game.getMediumFont().draw(game.getBatch(), "Apreta ESC para volver al menú", 100, 200);
+        this.game.getBatch().begin();
+        this.game.getMediumFont().draw(this.game.getBatch(), "Game Over !!! ", 120, 400, 400, 1, true);
+        this.game.getMediumFont().draw(this.game.getBatch(), "Apreta ESPACIO para reiniciar", 100, 300);
+        this.game.getMediumFont().draw(this.game.getBatch(), "Apreta ESC para volver al menú", 100, 200);
 
-        game.getBatch().end();
+        this.game.getBatch().end();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            stopMusic();
-            game.setScreen(new GameScreen(game, 1, 3, 0));
+            this.game.setScreen(new GameScreen(this.game, 1, 3, 0));
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            stopMusic();
-            game.setScreen(new IntroScreen(game));
+            this.game.setScreen(new IntroScreen(this.game));
         }
     }
+
     @Override
     public void show() {
-        playMusic("sounds/game_over.mp3", false);
+        SoundManager.getInstance().stopMusic();
+        SoundManager.getInstance().playSound("sounds/gameover.mp3");
     }
 }

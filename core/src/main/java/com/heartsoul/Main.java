@@ -16,19 +16,19 @@ import com.heartsoul.screens.IntroScreen;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends Game {
+    private static final String GAME_NAME = "HeartSoul";
+
     private SpriteBatch batch;
     private BitmapFont smallFont;
     private BitmapFont mediumFont;
     private BitmapFont largeFont;
-    private String gameName = "HeartSoul";
     private int highScore;
-
     private InputMultiplexer inputMultiplexer;
 
     @Override
     public void create() {
-        highScore = 0;
-        batch = new SpriteBatch();
+        this.highScore = 0;
+        this.batch = new SpriteBatch();
 
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
             Gdx.files.internal("fonts/PixelifySans-VariableFont_wght.ttf")
@@ -40,20 +40,20 @@ public class Main extends Game {
         parameter.color = Color.WHITE;
 
         parameter.size = 32;
-        smallFont = generator.generateFont(parameter);
+        this.smallFont = generator.generateFont(parameter);
 
         parameter.size = 48;
-        mediumFont = generator.generateFont(parameter);
+        this.mediumFont = generator.generateFont(parameter);
 
         parameter.size = 72;
-        largeFont = generator.generateFont(parameter);
+        this.largeFont = generator.generateFont(parameter);
 
         generator.dispose();
 
         // Preparar InputMultiplexer para permitir múltiples processors (escenas + atajos globales)
-        inputMultiplexer = new InputMultiplexer();
+        this.inputMultiplexer = new InputMultiplexer();
         // Añadir listener para F11 dentro del multiplexer
-        inputMultiplexer.addProcessor(new InputAdapter() {
+        this.inputMultiplexer.addProcessor(new InputAdapter() {
             @Override
             public boolean keyDown(int keycode) {
                 if (keycode == Input.Keys.F11) {
@@ -67,43 +67,48 @@ public class Main extends Game {
                 return false;
             }
         });
-        Gdx.input.setInputProcessor(inputMultiplexer);
+        Gdx.input.setInputProcessor(this.inputMultiplexer);
 
         setScreen(new IntroScreen(this));
     }
 
     // Permite a pantallas/stages añadir su InputProcessor al multiplexer
     public void addInputProcessor(InputProcessor p) {
-        if (inputMultiplexer != null) inputMultiplexer.addProcessor(p);
-        else Gdx.input.setInputProcessor(p);
+        if (this.inputMultiplexer != null) {
+            this.inputMultiplexer.addProcessor(p);
+        } else {
+            Gdx.input.setInputProcessor(p);
+        }
     }
 
     public void removeInputProcessor(InputProcessor p) {
-        if (inputMultiplexer != null) inputMultiplexer.removeProcessor(p);
+        if (this.inputMultiplexer != null) {
+            this.inputMultiplexer.removeProcessor(p);
+        }
     }
 
     public BitmapFont getSmallFont() {
-        return smallFont;
+        return this.smallFont;
     }
 
     public BitmapFont getMediumFont() {
-        return mediumFont;
+        return this.mediumFont;
     }
 
     public BitmapFont getLargeFont() {
-        return largeFont;
+        return this.largeFont;
     }
 
     public SpriteBatch getBatch() {
-        return batch;
+        return this.batch;
     }
 
     public String getGameName() {
-        return gameName;
+        return GAME_NAME;
     }
 
     public int getHighScore() {
-        return highScore;
+        return this.highScore;
     }
 
     public void setHighScore(int highScore) {
@@ -112,9 +117,10 @@ public class Main extends Game {
 
     @Override
     public void dispose() {
-        batch.dispose();
-        smallFont.dispose();
-        mediumFont.dispose();
-        largeFont.dispose();
+        this.batch.dispose();
+        this.smallFont.dispose();
+        this.mediumFont.dispose();
+        this.largeFont.dispose();
+        SoundManager.getInstance().dispose();
     }
 }

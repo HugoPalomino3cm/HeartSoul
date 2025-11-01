@@ -1,4 +1,4 @@
-package com.heartsoul;
+package com.heartsoul.entities;
 
 public interface PowerUp{
     /**
