@@ -9,7 +9,7 @@ public abstract class Projectile extends Entity {
     private float yVelocity;
 
     public Projectile(int x, int y, Texture tx, int size, float xVel, float yVel) {
-        super(x, y, tx, size, 1); // normalmente un proyectil tiene 1 vida
+        super(x, y, tx, size, 1);
         this.xVelocity = xVel;
         this.yVelocity = yVel;
     }
@@ -31,10 +31,11 @@ public abstract class Projectile extends Entity {
      */
     public void checkBounds(GameScreen game) {
         int maxW = game.getVirtualWidth();
-        int maxH = game.getVirtualHeight();
+        int bottomLimit = game.getBottomBarHeight();
+        int topLimit = game.getVirtualHeight() - game.getTopBarHeight();
 
         if (getX() + getWidth() < 0 || getX() > maxW ||
-            getY() + getHeight() < 0 || getY() > maxH) {
+            getY() + getHeight() < bottomLimit || getY() > topLimit) {
             setDead(true);
         }
     }

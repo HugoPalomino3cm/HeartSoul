@@ -1,4 +1,8 @@
-package com.heartsoul.entities;
+package com.heartsoul.entities.powerups;
+
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.MathUtils;
+import com.heartsoul.entities.Entity;
 
 public interface PowerUp{
     /**
@@ -24,4 +28,14 @@ public interface PowerUp{
      * @return true si sigue activo, false si terminó
      */
     boolean isActive();
+
+    /**
+     * Aplica un efecto visual de resaltado al powerup.
+     * @param sprite Sprite de la entidad
+     * @param time Tiempo acumulado para la animación
+     */
+    default void applyGlowEffect(Sprite sprite, float time) {
+        float scale = 1f + MathUtils.sin(time * 4f) * 0.15f;
+        sprite.setScale(scale);
+    }
 }

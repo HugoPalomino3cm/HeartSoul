@@ -10,19 +10,29 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.MathUtils;
 import com.heartsoul.*;
 import com.heartsoul.entities.*;
+import com.heartsoul.entities.powerups.Shield;
+import com.heartsoul.entities.powerups.SpeedUp;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
-
 public class GameScreen extends BaseScreen {
+    // Constantes de configuración
+    private static final float PROJECTILE_SPAWN_MIN = 0.5f;
+    private static final float PROJECTILE_SPAWN_MAX = 3f;
+    private static final float POWERUP_SPAWN_MIN = 8f;
+    private static final float POWERUP_SPAWN_MAX = 12f;
+    private static final float POWERUP_DURATION = 5f;
+    private static final float SPEED_MULTIPLIER = 2f;
+    private static final int ENTITY_SIZE = 64;
+
     private final int round;
-    private final int initialLives;
     private final int initialScore;
     private final Heart heart;
     private final ShapeRenderer shapeRenderer;
     private final List<Projectile> projectiles;
-    private final List<Entity> powerUps; // Lista para Shield y SpeedUp
+    private final List<Entity> powerUps;
 
     // Texturas
     private Texture bulletTx;
@@ -37,8 +47,9 @@ public class GameScreen extends BaseScreen {
     private float timerAccumulator;
     private float spawnTimer;
     private float powerUpSpawnTimer;
+    private float nextProjectileSpawn;
+    private float nextPowerUpSpawn;
 
-    // Power-ups activos
     private Shield activeShield;
     private SpeedUp activeSpeedUp;
 
@@ -46,7 +57,6 @@ public class GameScreen extends BaseScreen {
         super(game);
         this.shapeRenderer = new ShapeRenderer();
         this.round = round;
-        this.initialLives = lives;
         this.powerUpSpawnTimer = 0f;
         this.activeShield = null;
         this.activeSpeedUp = null;
@@ -54,15 +64,17 @@ public class GameScreen extends BaseScreen {
         this.powerUps = new ArrayList<>();
         this.projectiles = new ArrayList<>();
         this.powerUp = "NINGUNO";
-        this.timerSeconds = 45;
         this.timerAccumulator = 0f;
+        this.timerSeconds = 0;
         this.spawnTimer = 0f;
+        this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN, PROJECTILE_SPAWN_MAX);
+        this.nextPowerUpSpawn = MathUtils.random(POWERUP_SPAWN_MIN, POWERUP_SPAWN_MAX);
 
-        // Crear el heart en coordenadas del mundo virtual (centrado)
+        // Crear el heart centrado
         this.heart = new Heart(
-            (int) (getVirtualWidth() / 2 - 22),
-            (int) (getVirtualHeight() / 2 - 22),
-            new Texture(Gdx.files.internal("ui/heart.png"))
+            getVirtualWidth() / 2 - 30,
+            getVirtualHeight() / 2 - 30,
+            new Texture(Gdx.files.internal("ui/entities/heart.png"))
         );
 
         this.heart.setLives(lives);
@@ -88,9 +100,9 @@ public class GameScreen extends BaseScreen {
         float secondLineY = getVirtualHeight() - 50f;
 
         // Estilos para los íconos de vida
-        float iconWidth = 50f; // ancho
-        float iconHeight = 40f; // alto
-        float iconPadding = 12f; // espacio entre íconos
+        float iconWidth = 50f;
+        float iconHeight = 40f;
+        float iconPadding = 12f;
 
         // Textos de la primera línea
         String leftText = "VIDAS: ";
@@ -101,21 +113,18 @@ public class GameScreen extends BaseScreen {
         this.game.getSmallFont().setColor(Color.RED);
         this.game.getSmallFont().draw(this.batch, leftText, 10, topY);
 
-        // Dibujar íconos de vida junto al texto
-
         // Medir el texto "VIDAS: " para calcular dónde empezar los íconos
         gl.setText(this.game.getSmallFont(), leftText);
 
         // Posición X inicial para el primer ícono
         float startX = 10 + gl.width + iconPadding;
-        // Posición Y (alinea arriba)
-        float iconY = topY + 5 - iconHeight;
+        // Posición Y (alinea arriba) - ajustado para mover los íconos más arriba
+        float iconY = topY + 10 - iconHeight;
 
         for (int i = 0; i < this.heart.getLives(); i++) {
-            // Usamos el método draw() que escala la imagen
             this.batch.draw(
                 this.lifeTx,
-                startX + i * (iconWidth + iconPadding), // Usamos iconPadding
+                startX + i * (iconWidth + iconPadding),
                 iconY,
                 iconWidth,
                 iconHeight
@@ -123,18 +132,18 @@ public class GameScreen extends BaseScreen {
         }
 
         // Dibujar Puntaje (Centro)
-        gl.setText(this.game.getSmallFont(), centerText); // Reutilizamos 'gl'
+        gl.setText(this.game.getSmallFont(), centerText);
         this.game.getSmallFont().setColor(Color.WHITE);
         this.game.getSmallFont().draw(this.batch, centerText, (getVirtualWidth() - gl.width) / 2f, topY);
 
         // Dibujar Ronda (Derecha)
-        gl.setText(this.game.getSmallFont(), rightText); // Reutilizamos 'gl'
+        gl.setText(this.game.getSmallFont(), rightText);
         this.game.getSmallFont().setColor(Color.GOLD);
         this.game.getSmallFont().draw(this.batch, rightText, getVirtualWidth() - gl.width - 10f, topY);
 
         // Textos de la segunda línea
         String powerText = "Power-Up: [" + this.powerUp + "]";
-        String timeText = String.format("Tiempo Rund: %02d:%02d", this.timerSeconds / 60, this.timerSeconds % 60);
+        String timeText = String.format("Tiempo: %02d:%02d", this.timerSeconds / 60, this.timerSeconds % 60);
 
         // Power-Up a la izquierda (segunda línea)
         this.game.getSmallFont().setColor(Color.CYAN);
@@ -144,37 +153,47 @@ public class GameScreen extends BaseScreen {
         gl.setText(this.game.getSmallFont(), timeText);
         this.game.getSmallFont().setColor(Color.LIGHT_GRAY);
         this.game.getSmallFont().draw(this.batch, timeText, getVirtualWidth() - gl.width - 10f, secondLineY);
-
-        // Restaurar color por si acaso
-        this.game.getSmallFont().setColor(Color.WHITE);
     }
 
-    // Método para generar proyectiles cada 2 segundos
+    // Método para generar proyectiles
     private void spawnProjectiles(float delta) {
+        // Verificar que las texturas estén cargadas
+        if (this.bulletTx == null || this.bombTx == null) {
+            return;
+        }
+
         this.spawnTimer += delta;
-        float randomInterval = MathUtils.random(0.5f, 3f);
 
-        if (this.spawnTimer >= randomInterval) {
+        if (this.spawnTimer >= this.nextProjectileSpawn) {
             this.spawnTimer = 0f;
+            this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN, PROJECTILE_SPAWN_MAX);
 
-            if (MathUtils.randomBoolean(0.5f)) {
-                // Genera Bullet
-                Bullet bullet = new Bullet(
-                    getVirtualWidth(),
-                    getVirtualHeight(),
-                    this.bulletTx
-                );
-                this.projectiles.add(bullet);
+            if (MathUtils.randomBoolean(0.3f)) {
+                spawnBomb();
             } else {
-                // Genera Bomb en posición aleatoria y velocidad aleatoria
-                float x = MathUtils.random(0, getVirtualWidth() - 20);
-                float y = MathUtils.random(0, getVirtualHeight() - 20);
-                float xVel = MathUtils.random(-4f, 4f);
-                float yVel = MathUtils.random(-4f, 4f);
-                Bomb bomb = new Bomb((int)x, (int)y, this.bombTx, xVel, yVel);
-                this.projectiles.add(bomb);
+                spawnBullet();
             }
         }
+    }
+
+    private void spawnBullet() {
+        int topLimit = getVirtualHeight() - getTopBarHeight();
+        int randomX = MathUtils.random(0, getVirtualWidth() - ENTITY_SIZE);
+        int spawnY = topLimit - ENTITY_SIZE;
+
+        this.projectiles.add(new Bullet(randomX, spawnY, this.bulletTx));
+    }
+
+    private void spawnBomb() {
+        int bottomLimit = getBottomBarHeight();
+        int topLimit = getVirtualHeight() - getTopBarHeight();
+
+        float x = MathUtils.random(0, getVirtualWidth() - ENTITY_SIZE);
+        float y = MathUtils.random(bottomLimit, topLimit - ENTITY_SIZE);
+        float xVel = MathUtils.random(-4f, 4f);
+        float yVel = MathUtils.random(-4f, 4f);
+
+        this.projectiles.add(new Bomb((int)x, (int)y, this.bombTx, xVel, yVel));
     }
 
     // Método para actualizar el texto del power-up activo
@@ -188,52 +207,55 @@ public class GameScreen extends BaseScreen {
         }
     }
 
-    // Método para generar power-ups cada 8-12 segundos
+    // Método para generar power-ups
     private void spawnPowerUps(float delta) {
+        // Verificar que las texturas estén cargadas
+        if (this.shieldTx == null || this.speedUpTx == null) {
+            return;
+        }
+
         this.powerUpSpawnTimer += delta;
-        float randomInterval = MathUtils.random(8f, 12f);
 
-        if (this.powerUpSpawnTimer >= randomInterval) {
+        if (this.powerUpSpawnTimer >= this.nextPowerUpSpawn) {
             this.powerUpSpawnTimer = 0f;
+            this.nextPowerUpSpawn = MathUtils.random(POWERUP_SPAWN_MIN, POWERUP_SPAWN_MAX);
 
-            // 50% probabilidad de generar Shield o SpeedUp
             if (MathUtils.randomBoolean(0.5f)) {
-                Shield shield = new Shield(
+                this.powerUps.add(new Shield(
                     getVirtualWidth(),
                     getVirtualHeight(),
                     this.shieldTx,
-                    5f // Duración de 5 segundos
-                );
-                this.powerUps.add(shield);
+                    POWERUP_DURATION
+                ));
             } else {
-                SpeedUp speedUp = new SpeedUp(
+                this.powerUps.add(new SpeedUp(
                     getVirtualWidth(),
                     getVirtualHeight(),
                     this.speedUpTx,
-                    5f, // Duración de 5 segundos
-                    2f  // Velocidad x2
-                );
-                this.powerUps.add(speedUp);
+                    POWERUP_DURATION,
+                    SPEED_MULTIPLIER
+                ));
             }
         }
     }
 
-
     @Override
     public void show() {
         registerESC();
-        setBackground(new Texture(Gdx.files.internal("ui/gameGuideBackground.png")));
-        this.bulletTx = new Texture(Gdx.files.internal("ui/bullet.png"));
-        this.bombTx = new Texture(Gdx.files.internal("ui/bomb.png"));
+        setBackground(new Texture(Gdx.files.internal("ui/background2.png")));
         this.lifeTx = new Texture(Gdx.files.internal("ui/life.png"));
-        this.shieldTx = new Texture(Gdx.files.internal("ui/shield.png"));
-        this.speedUpTx = new Texture(Gdx.files.internal("ui/speedUp.png"));
+
+        //Entities
+        this.bulletTx = new Texture(Gdx.files.internal("ui/entities/bullet.png"));
+        this.bombTx = new Texture(Gdx.files.internal("ui/entities/bomb.png"));
+        this.shieldTx = new Texture(Gdx.files.internal("ui/entities/shield.png"));
+        this.speedUpTx = new Texture(Gdx.files.internal("ui/entities/speedUp.png"));
 
         // Cambiar a la música del juego (respetando el estado de pausa)
         SoundManager.getInstance().playMusic("sounds/game_music.mp3", 100);
     }
 
-    // Lineas de contorno que limitan el movimiento del jugar
+    // Lineas de contorno que limitan el movimiento del jugador
     private void drawMovementArea(SpriteBatch batch) {
         batch.end();
 
@@ -241,10 +263,10 @@ public class GameScreen extends BaseScreen {
         this.shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
         this.shapeRenderer.setColor(255, 255, 255, 1); // Blanco
 
-        float x = 1; // Posición X inicial (1 pixel desde el borde izquierdo)
-        float y = getBottomBarHeight(); // Posición Y inicial (altura de la barra inferior)
-        float width = getVirtualWidth() - 2; // Ancho del rectángulo
-        float height = getVirtualHeight() - getTopBarHeight() - getBottomBarHeight(); // Alto del rectángulo
+        float x = 1;
+        float y = getBottomBarHeight();
+        float width = getVirtualWidth() - 2;
+        float height = getVirtualHeight() - getTopBarHeight() - getBottomBarHeight();
 
         // Línea superior
         this.shapeRenderer.line(x, y + height, x + width, y + height);
@@ -282,13 +304,20 @@ public class GameScreen extends BaseScreen {
 
         // Movemos el heart
         this.heart.move(dx, dy, this);
+
+        // Actualizar el temporizador (cuenta hacia arriba)
+        this.timerAccumulator += delta;
+        if (this.timerAccumulator >= 1f) {
+            this.timerAccumulator -= 1f;
+            this.timerSeconds++;
+        }
+
         this.heart.update();
 
         // Fondo (renderBackground() maneja su propio begin/end)
-        Color oldColor = this.batch.getColor();
         this.batch.setColor(1f, 1f, 1f, 0.6f);
         renderBackground();
-        this.batch.setColor(oldColor);
+        this.batch.setColor(1f, 1f, 1f, 1f); // Restaurar a blanco opaco
 
         // Ahora comenzamos el batch para dibujar el resto
         this.batch.begin();
@@ -301,8 +330,10 @@ public class GameScreen extends BaseScreen {
         // Generar power-ups
         spawnPowerUps(delta);
 
-        // Actualizar y dibujar proyectiles
-        for (Projectile projectile : this.projectiles) {
+        // Actualizar y dibujar proyectiles usando Iterator para evitar ConcurrentModificationException
+        Iterator<Projectile> projectileIterator = this.projectiles.iterator();
+        while (projectileIterator.hasNext()) {
+            Projectile projectile = projectileIterator.next();
             projectile.update(getVirtualWidth(), getVirtualHeight());
             projectile.checkBounds(this);
 
@@ -312,13 +343,18 @@ public class GameScreen extends BaseScreen {
             }
 
             projectile.draw(this.batch, this);
+
+            // Remover si está muerto
+            if (projectile.isDead()) {
+                projectileIterator.remove();
+            }
         }
 
-        // Remover proyectiles destruidos
-        this.projectiles.removeIf(Entity::isDead);
-
-        // Dibujar power-ups y detectar colisiones
-        for (Entity powerUp : this.powerUps) {
+        // Dibujar power-ups y detectar colisiones usando Iterator
+        Iterator<Entity> powerUpIterator = this.powerUps.iterator();
+        while (powerUpIterator.hasNext()) {
+            Entity powerUp = powerUpIterator.next();
+            powerUp.update(getVirtualWidth(), getVirtualHeight());
             powerUp.draw(this.batch, this);
 
             // Verificar colisión con Heart (recoger power-up)
@@ -327,25 +363,24 @@ public class GameScreen extends BaseScreen {
                     Shield shield = (Shield) powerUp;
                     shield.apply(this.heart);
                     this.activeShield = shield;
-                    updatePowerUpDisplay();
                 } else if (powerUp instanceof SpeedUp) {
                     SpeedUp speedUp = (SpeedUp) powerUp;
                     speedUp.apply(this.heart);
                     this.activeSpeedUp = speedUp;
-                    updatePowerUpDisplay();
                 }
             }
-        }
 
-        // Remover power-ups recogidos
-        this.powerUps.removeIf(Entity::isDead);
+            // Remover si está muerto
+            if (powerUp.isDead()) {
+                powerUpIterator.remove();
+            }
+        }
 
         // Actualizar power-ups activos
         if (this.activeShield != null) {
             this.activeShield.updatePowerUp(delta, this.heart);
             if (!this.activeShield.isActive()) {
                 this.activeShield = null;
-                updatePowerUpDisplay();
             }
         }
 
@@ -353,9 +388,11 @@ public class GameScreen extends BaseScreen {
             this.activeSpeedUp.updatePowerUp(delta, this.heart);
             if (!this.activeSpeedUp.isActive()) {
                 this.activeSpeedUp = null;
-                updatePowerUpDisplay();
             }
         }
+
+        // Actualizar el display del power-up cada frame para mostrar tiempo restante
+        updatePowerUpDisplay();
 
         drawMovementArea(this.batch);
 
@@ -392,3 +429,4 @@ public class GameScreen extends BaseScreen {
         }
     }
 }
+

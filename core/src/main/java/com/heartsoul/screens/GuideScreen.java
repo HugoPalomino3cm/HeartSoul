@@ -30,7 +30,7 @@ public class GuideScreen extends BaseScreen {
     public void show() {
         registerESC();
         initializeStage();
-        setBackground(new Texture(Gdx.files.internal("ui/gameGuideBackground.png")));
+        setBackground(new Texture(Gdx.files.internal("ui/background2.png")));
         guideMenu();
     }
 

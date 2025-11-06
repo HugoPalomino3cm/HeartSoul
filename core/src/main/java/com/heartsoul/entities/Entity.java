@@ -68,6 +68,10 @@ public abstract class Entity {
         return this.sprite.getBoundingRectangle();
     }
 
+    public Sprite getSprite() {
+        return this.sprite;
+    }
+
     public void setDead(boolean dead) {
         this.dead = dead;
     }

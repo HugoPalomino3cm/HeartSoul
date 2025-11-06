@@ -1,11 +1,12 @@
 package com.heartsoul.entities;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.heartsoul.screens.GameScreen;
 
 public class Bomb extends Projectile {
-    private static final int SIZE = 100;
-    private static final float LIFETIME = 10f; // segundos
-    private static final float DELTA_TIME = 1f / 60f; // asumiendo 60 FPS
+    private static final int SIZE = 64;
+    private static final float LIFETIME = 10f;
 
     private float lifeTime;
 
@@ -16,39 +17,42 @@ public class Bomb extends Projectile {
 
     @Override
     public void update(int virtualWidth, int virtualHeight) {
-        super.update(virtualWidth, virtualHeight); // mueve la bomba según la velocidad
+        // Rotar la bomba constantemente
+        getSprite().rotate(120f * Gdx.graphics.getDeltaTime());
 
-        float minX = 0;
-        float minY = 0;
-        float maxX = virtualWidth - getWidth();
-        float maxY = virtualHeight - getHeight();
-
-        // Lógica extra: rebote
-        if (getX() < minX) {
-            setPosition(minX, getY());
-            setXVelocity(-getXVelocity());
-        } else if (getX() > maxX) {
-            setPosition(maxX, getY());
-            setXVelocity(-getXVelocity());
-        }
-
-        if (getY() < minY) {
-            setPosition(getX(), minY);
-            setYVelocity(-getYVelocity());
-        } else if (getY() > maxY) {
-            setPosition(getX(), maxY);
-            setYVelocity(-getYVelocity());
-        }
+        // Mover la bomba
+        super.update(virtualWidth, virtualHeight);
 
         // Tiempo de vida
-        this.lifeTime += DELTA_TIME;
+        this.lifeTime += Gdx.graphics.getDeltaTime();
         if (this.lifeTime > LIFETIME) {
             setDead(true);
         }
     }
 
-    // Getter para tiempo de vida
-    public float getLifeTime() {
-        return this.lifeTime;
+    @Override
+    public void checkBounds(GameScreen game) {
+        int maxW = game.getVirtualWidth();
+        int bottomLimit = game.getBottomBarHeight();
+        int topLimit = game.getVirtualHeight() - game.getTopBarHeight();
+
+        // Rebote horizontal
+        if (getX() < 0) {
+            setPosition(0, getY());
+            setXVelocity(-getXVelocity());
+        } else if (getX() + getWidth() > maxW) {
+            setPosition(maxW - getWidth(), getY());
+            setXVelocity(-getXVelocity());
+        }
+
+        // Rebote vertical dentro del área de juego
+        if (getY() < bottomLimit) {
+            setPosition(getX(), bottomLimit);
+            setYVelocity(-getYVelocity());
+        } else if (getY() + getHeight() > topLimit) {
+            setPosition(getX(), topLimit - getHeight());
+            setYVelocity(-getYVelocity());
+        }
     }
 }
+
