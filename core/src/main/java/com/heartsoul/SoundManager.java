@@ -4,20 +4,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.utils.Disposable;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Clase maneja todos los sonidos/música del juego usando Sound de LibGDX.
  * Implementa un singleton para acceso global.
- */
+ **/
 public class SoundManager implements Disposable {
 
-    private static SoundManager instance;
-    private final Map<String, Sound> soundCache = new HashMap<>();
     private Long currentMusicId = null;
     private Sound currentMusic = null;
     private boolean musicPaused = false;
+
+    private static SoundManager instance;
 
     public static SoundManager getInstance() {
         if (instance == null) {
@@ -26,18 +23,18 @@ public class SoundManager implements Disposable {
         return instance;
     }
 
-    // Carga y cachea sonidos
+    // Carga un Sound nuevo cada vez (sin cache)
     private Sound getSound(String soundPath) {
-        if (!soundCache.containsKey(soundPath)) {
-            try {
-                Sound sound = Gdx.audio.newSound(Gdx.files.internal(soundPath));
-                soundCache.put(soundPath, sound);
-            } catch (Exception e) {
-                System.err.println("No se pudo cargar el sonido: " + soundPath + " - " + e.getMessage());
-                return null;
-            }
+        if (soundPath == null || soundPath.isEmpty()) {
+            System.err.println("Ruta de sonido vacía o nula: " + soundPath);
+            return null;
         }
-        return soundCache.get(soundPath);
+        try {
+            return Gdx.audio.newSound(Gdx.files.internal(soundPath));
+        } catch (Exception e) {
+            System.err.println("No se pudo cargar el sonido: " + soundPath + " - " + e.getMessage());
+            return null;
+        }
     }
 
     // Reproducir efecto simple
@@ -45,6 +42,7 @@ public class SoundManager implements Disposable {
         Sound sound = getSound(soundPath);
         if (sound != null) {
             sound.play();
+            // No se guarda en cache; no se dispone inmediatamente para mantener compatibilidad
         }
     }
 
@@ -54,6 +52,7 @@ public class SoundManager implements Disposable {
         if (sound != null) {
             long id = sound.play(volume);
             sound.setLooping(id, loop);
+            // Si se quiere optimizar, se puede disponer aquí cuando no haya loop, pero lo dejamos así por simplicidad
         }
     }
 
@@ -101,6 +100,11 @@ public class SoundManager implements Disposable {
     public void stopMusic() {
         if (currentMusic != null && currentMusicId != null) {
             currentMusic.stop(currentMusicId);
+            try {
+                currentMusic.dispose();
+            } catch (Exception e) {
+                System.err.println("Error al disponer la música: " + e.getMessage());
+            }
             currentMusicId = null;
             currentMusic = null;
             musicPaused = false;
@@ -110,9 +114,6 @@ public class SoundManager implements Disposable {
     @Override
     public void dispose() {
         stopMusic();
-        for (Sound sound : soundCache.values()) {
-            sound.dispose();
-        }
-        soundCache.clear();
+        // Sin cache, nada más que limpiar
     }
 }

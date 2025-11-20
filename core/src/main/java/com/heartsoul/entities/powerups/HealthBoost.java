@@ -4,9 +4,9 @@ import com.badlogic.gdx.graphics.Texture;
 import com.heartsoul.entities.Entity;
 import com.heartsoul.entities.Heart;
 
-public class Shield extends AbstractPowerUp {
+public class HealthBoost extends AbstractPowerUp {
 
-    public Shield(int screenWidth, int screenHeight, Texture tx, float duration) {
+    public HealthBoost(int screenWidth, int screenHeight, Texture tx, float duration) {
         super(screenWidth, screenHeight, tx, duration);
     }
 
@@ -14,20 +14,18 @@ public class Shield extends AbstractPowerUp {
     protected void applyEffect(Entity target) {
         if (target instanceof Heart) {
             Heart heart = (Heart) target;
-            heart.setInvulnerable(true);
+            heart.setLives(heart.getLives() + 1);
         }
     }
 
     @Override
     protected void removeEffect(Entity target) {
-        if (target instanceof Heart) {
-            Heart heart = (Heart) target;
-            heart.setInvulnerable(false);
-        }
+        // Efecto permanente, no se remueve
     }
 
     @Override
     protected String getPowerUpName() {
-        return "Shield";
+        return "Health";
     }
 }
+

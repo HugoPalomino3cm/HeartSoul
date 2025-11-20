@@ -10,8 +10,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.MathUtils;
 import com.heartsoul.*;
 import com.heartsoul.entities.*;
-import com.heartsoul.entities.powerups.Shield;
-import com.heartsoul.entities.powerups.SpeedUp;
+import com.heartsoul.entities.powerups.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -53,7 +52,7 @@ public class GameScreen extends BaseScreen {
     private final Heart heart;
     private final ShapeRenderer shapeRenderer;
     private final List<Projectile> projectiles;
-    private final List<Entity> powerUps;
+    private final List<PowerUp> powerUps;
     private final List<BombWarning> warnings;
 
     // Texturas
@@ -62,6 +61,7 @@ public class GameScreen extends BaseScreen {
     private Texture lifeTx;
     private Texture shieldTx;
     private Texture speedUpTx;
+    private Texture healthBoostTx;
     private Texture warningTx;
 
     // Header info
@@ -235,7 +235,7 @@ public class GameScreen extends BaseScreen {
     // Método para generar power-ups
     private void spawnPowerUps(float delta) {
         // Verificar que las texturas estén cargadas
-        if (this.shieldTx == null || this.speedUpTx == null) {
+        if (this.shieldTx == null || this.speedUpTx == null || this.healthBoostTx == null) {
             return;
         }
 
@@ -245,22 +245,36 @@ public class GameScreen extends BaseScreen {
             this.powerUpSpawnTimer = 0f;
             this.nextPowerUpSpawn = MathUtils.random(POWERUP_SPAWN_MIN, POWERUP_SPAWN_MAX);
 
-            if (MathUtils.randomBoolean(0.5f)) {
-                this.powerUps.add(new Shield(
-                    getVirtualWidth(),
-                    getVirtualHeight(),
+            PowerUp newPowerUp;
+            // Generar aleatoriamente uno de los 3 power-ups
+            float random = MathUtils.random();
+            if (random < 0.33f) {
+                // 33% Shield
+                newPowerUp = new Shield(
+                    (int) getVirtualWidth(),
+                    (int) getVirtualHeight(),
                     this.shieldTx,
                     POWERUP_DURATION
-                ));
-            } else {
-                this.powerUps.add(new SpeedUp(
-                    getVirtualWidth(),
-                    getVirtualHeight(),
+                );
+            } else if (random < 0.66f) {
+                // 33% SpeedUp
+                newPowerUp = new SpeedUp(
+                    (int) getVirtualWidth(),
+                    (int) getVirtualHeight(),
                     this.speedUpTx,
                     POWERUP_DURATION,
                     SPEED_MULTIPLIER
-                ));
+                );
+            } else {
+                // 34% HealthBoost
+                newPowerUp = new HealthBoost(
+                    (int) getVirtualWidth(),
+                    (int) getVirtualHeight(),
+                    this.healthBoostTx,
+                    POWERUP_DURATION
+                );
             }
+            this.powerUps.add(newPowerUp);
         }
     }
 
@@ -275,10 +289,11 @@ public class GameScreen extends BaseScreen {
         this.bombTx = new Texture(Gdx.files.internal("ui/entities/bomb.png"));
         this.shieldTx = new Texture(Gdx.files.internal("ui/entities/shield.png"));
         this.speedUpTx = new Texture(Gdx.files.internal("ui/entities/speedUp.png"));
+        this.healthBoostTx = new Texture(Gdx.files.internal("ui/entities/heart2.png"));
         this.warningTx = new Texture(Gdx.files.internal("ui/entities/warning.png"));
 
         // Cambiar a la música del juego (respetando el estado de pausa)
-        SoundManager.getInstance().playMusic("sounds/game_music.mp3", 100);
+        SoundManager.getInstance().playMusic("sounds/game_music.mp3", 1.0f);
     }
 
     // Lineas de contorno que limitan el movimiento del jugador
@@ -377,22 +392,20 @@ public class GameScreen extends BaseScreen {
         }
 
         // Dibujar power-ups y detectar colisiones usando Iterator
-        Iterator<Entity> powerUpIterator = this.powerUps.iterator();
+        Iterator<PowerUp> powerUpIterator = this.powerUps.iterator();
         while (powerUpIterator.hasNext()) {
-            Entity powerUp = powerUpIterator.next();
+            PowerUp powerUp = powerUpIterator.next();
             powerUp.update(getVirtualWidth(), getVirtualHeight());
             powerUp.draw(this.batch, this);
 
             // Verificar colisión con Heart (recoger power-up)
             if (!powerUp.isDead() && powerUp.getBoundingRectangle().overlaps(this.heart.getBoundingRectangle())) {
+                powerUp.apply(this.heart);
+
                 if (powerUp instanceof Shield) {
-                    Shield shield = (Shield) powerUp;
-                    shield.apply(this.heart);
-                    this.activeShield = shield;
+                    this.activeShield = (Shield) powerUp;
                 } else if (powerUp instanceof SpeedUp) {
-                    SpeedUp speedUp = (SpeedUp) powerUp;
-                    speedUp.apply(this.heart);
-                    this.activeSpeedUp = speedUp;
+                    this.activeSpeedUp = (SpeedUp) powerUp;
                 }
             }
 
@@ -467,9 +480,11 @@ public class GameScreen extends BaseScreen {
         if (this.speedUpTx != null) {
             this.speedUpTx.dispose();
         }
+        if (this.healthBoostTx != null) {
+            this.healthBoostTx.dispose();
+        }
         if (this.warningTx != null) {
             this.warningTx.dispose();
         }
     }
 }
-
