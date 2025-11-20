@@ -15,6 +15,7 @@ ui/entities/heart.png
 ui/entities/heart2.png
 ui/entities/shield.png
 ui/entities/speedUp.png
+ui/entities/warning.png
 ui/life.png
 ui/music-off.png
 ui/music-on.png

@@ -6,6 +6,7 @@ import com.heartsoul.Main;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
+    @SuppressWarnings("CallToPrintStackTrace")
     public static void main(String[] args) {
         try {
             if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.

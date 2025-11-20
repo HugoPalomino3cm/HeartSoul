@@ -26,6 +26,27 @@ public class GameScreen extends BaseScreen {
     private static final float POWERUP_DURATION = 5f;
     private static final float SPEED_MULTIPLIER = 2f;
     private static final int ENTITY_SIZE = 64;
+    private static final float WARNING_DURATION = 1.0f; // 1 segundo de advertencia
+
+    // Clase interna para gestionar las advertencias de bombas
+    private static class BombWarning {
+        float x, y;
+        float xVel, yVel;
+        float timeRemaining;
+
+        public BombWarning(float x, float y, float xVel, float yVel) {
+            this.x = x;
+            this.y = y;
+            this.xVel = xVel;
+            this.yVel = yVel;
+            this.timeRemaining = WARNING_DURATION;
+        }
+
+        public boolean update(float delta) {
+            timeRemaining -= delta;
+            return timeRemaining <= 0; // true cuando debe aparecer la bomba
+        }
+    }
 
     private final int round;
     private final int initialScore;
@@ -33,6 +54,7 @@ public class GameScreen extends BaseScreen {
     private final ShapeRenderer shapeRenderer;
     private final List<Projectile> projectiles;
     private final List<Entity> powerUps;
+    private final List<BombWarning> warnings;
 
     // Texturas
     private Texture bulletTx;
@@ -40,6 +62,7 @@ public class GameScreen extends BaseScreen {
     private Texture lifeTx;
     private Texture shieldTx;
     private Texture speedUpTx;
+    private Texture warningTx;
 
     // Header info
     private String powerUp;
@@ -63,6 +86,7 @@ public class GameScreen extends BaseScreen {
         this.initialScore = score;
         this.powerUps = new ArrayList<>();
         this.projectiles = new ArrayList<>();
+        this.warnings = new ArrayList<>();
         this.powerUp = "NINGUNO";
         this.timerAccumulator = 0f;
         this.timerSeconds = 0;
@@ -193,7 +217,8 @@ public class GameScreen extends BaseScreen {
         float xVel = MathUtils.random(-4f, 4f);
         float yVel = MathUtils.random(-4f, 4f);
 
-        this.projectiles.add(new Bomb((int)x, (int)y, this.bombTx, xVel, yVel));
+        // Crear advertencia en lugar de bomba directa
+        this.warnings.add(new BombWarning(x, y, xVel, yVel));
     }
 
     // Método para actualizar el texto del power-up activo
@@ -250,6 +275,7 @@ public class GameScreen extends BaseScreen {
         this.bombTx = new Texture(Gdx.files.internal("ui/entities/bomb.png"));
         this.shieldTx = new Texture(Gdx.files.internal("ui/entities/shield.png"));
         this.speedUpTx = new Texture(Gdx.files.internal("ui/entities/speedUp.png"));
+        this.warningTx = new Texture(Gdx.files.internal("ui/entities/warning.png"));
 
         // Cambiar a la música del juego (respetando el estado de pausa)
         SoundManager.getInstance().playMusic("sounds/game_music.mp3", 100);
@@ -396,6 +422,20 @@ public class GameScreen extends BaseScreen {
 
         drawMovementArea(this.batch);
 
+        // Advertencias de bombas
+        Iterator<BombWarning> warningIterator = this.warnings.iterator();
+        while (warningIterator.hasNext()) {
+            BombWarning warning = warningIterator.next();
+            if (warning.update(delta)) {
+                // Generar la bomba en la posición de la advertencia
+                this.projectiles.add(new Bomb((int)warning.x, (int)warning.y, this.bombTx, warning.xVel, warning.yVel));
+                warningIterator.remove(); // Remover la advertencia después de generar la bomba
+            } else {
+                // Dibujar la advertencia
+                this.batch.draw(this.warningTx, warning.x, warning.y, ENTITY_SIZE, ENTITY_SIZE);
+            }
+        }
+
         if (this.heart.isDead()) {
             if (this.initialScore > this.game.getHighScore()) {
                 this.game.setHighScore(this.initialScore);
@@ -426,6 +466,9 @@ public class GameScreen extends BaseScreen {
         }
         if (this.speedUpTx != null) {
             this.speedUpTx.dispose();
+        }
+        if (this.warningTx != null) {
+            this.warningTx.dispose();
         }
     }
 }
