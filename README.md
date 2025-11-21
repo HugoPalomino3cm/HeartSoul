@@ -33,7 +33,12 @@ Utiliza tus reflejos, poderes y astucia para esquivar los ataques y resistir la 
 Al iniciar HeartSoul verás un **menú principal** con 3 opciones clave:
 
 - **Jugar 🎮:**  
-  Comienza la partida de inmediato.
+  Te lleva a la pantalla de **selección de dificultad**, donde puedes elegir entre:
+  - **Fácil 😊:** Ideal para principiantes, enemigos más lentos y menos agresivos.
+  - **Normal ⚖️:** Balance perfecto entre desafío y diversión.
+  - **Difícil 💀:** Para expertos, enemigos rápidos e implacables.
+  
+  Una vez seleccionada tu dificultad, presiona **CONTINUAR** para comenzar la partida.
 
 - **Guía 📖:**  
   Al seleccionarla puedes elegir entre:
@@ -41,6 +46,9 @@ Al iniciar HeartSoul verás un **menú principal** con 3 opciones clave:
     Explica los controles básicos y avanzados.
   - **Historia 🧩:**  
     Presenta el trasfondo y objetivo del juego.
+
+- **Salir 🚪:**  
+  Cierra el juego.
 
 ---
 
