@@ -67,7 +67,7 @@ public class IntroScreen extends BaseScreen {
 
         // Botón JUGAR
         TextButton playButton = createButton("JUGAR", buttonStyle, () -> {
-            this.game.setScreen(new GameScreen(this.game, 1, 3, 0));
+            this.game.setScreen(new DifficultyScreen(this.game));
         });
 
         // Botón GUÍA
@@ -165,4 +165,3 @@ public class IntroScreen extends BaseScreen {
         }
     }
 }
-

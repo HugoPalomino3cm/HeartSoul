@@ -3,15 +3,18 @@ package com.heartsoul.entities;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.Texture;
 import com.heartsoul.screens.GameScreen;
+import com.heartsoul.entities.strategies.MovementStrategy;
 
 public abstract class Projectile extends Entity {
     private float xVelocity;
     private float yVelocity;
+    private MovementStrategy movementStrategy;
 
-    public Projectile(int x, int y, Texture tx, int size, float xVel, float yVel) {
+    public Projectile(int x, int y, Texture tx, int size, float xVel, float yVel, MovementStrategy strategy) {
         super(x, y, tx, size, 1);
         this.xVelocity = xVel;
         this.yVelocity = yVel;
+        this.movementStrategy = strategy;
     }
 
     @Override
@@ -23,20 +26,18 @@ public abstract class Projectile extends Entity {
 
     @Override
     public void update(int virtualWidth, int virtualHeight) {
-        setPosition(getX() + this.xVelocity, getY() + this.yVelocity);
+        // Delegar el movimiento a la estrategia
+        if (this.movementStrategy != null) {
+            this.movementStrategy.move(this, virtualWidth, virtualHeight);
+        }
     }
 
     /**
-     * Método para verificar si el proyectil sale de pantalla
+     * Método para verificar límites usando la estrategia
      */
     public void checkBounds(GameScreen game) {
-        int maxW = game.getVirtualWidth();
-        int bottomLimit = game.getBottomBarHeight();
-        int topLimit = game.getVirtualHeight() - game.getTopBarHeight();
-
-        if (getX() + getWidth() < 0 || getX() > maxW ||
-            getY() + getHeight() < bottomLimit || getY() > topLimit) {
-            setDead(true);
+        if (this.movementStrategy != null) {
+            this.movementStrategy.checkBounds(this, game);
         }
     }
 
@@ -48,20 +49,31 @@ public abstract class Projectile extends Entity {
     }
 
     // Getters
-    protected float getXVelocity() {
+    public float getXVelocity() {
         return this.xVelocity;
     }
 
-    protected float getYVelocity() {
+    public float getYVelocity() {
         return this.yVelocity;
     }
 
+    public MovementStrategy getMovementStrategy() {
+        return this.movementStrategy;
+    }
+
     // Setters
-    protected void setXVelocity(float xVelocity) {
+    public void setXVelocity(float xVelocity) {
         this.xVelocity = xVelocity;
     }
 
-    protected void setYVelocity(float yVelocity) {
+    public void setYVelocity(float yVelocity) {
         this.yVelocity = yVelocity;
+    }
+
+    /**
+     * Permite cambiar la estrategia de movimiento en tiempo de ejecución
+     */
+    public void setMovementStrategy(MovementStrategy strategy) {
+        this.movementStrategy = strategy;
     }
 }

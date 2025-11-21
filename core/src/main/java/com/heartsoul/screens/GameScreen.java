@@ -11,6 +11,10 @@ import com.badlogic.gdx.math.MathUtils;
 import com.heartsoul.*;
 import com.heartsoul.entities.*;
 import com.heartsoul.entities.powerups.*;
+import com.heartsoul.factories.GameEntityFactory;
+import com.heartsoul.factories.EasyGameEntityFactory;
+import com.heartsoul.factories.NormalGameEntityFactory;
+import com.heartsoul.factories.HardGameEntityFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -55,6 +59,9 @@ public class GameScreen extends BaseScreen {
     private final List<PowerUp> powerUps;
     private final List<BombWarning> warnings;
 
+    // Patrón Abstract Factory - Client utiliza la fábrica
+    private final GameEntityFactory entityFactory;
+
     // Texturas
     private Texture bulletTx;
     private Texture bombTx;
@@ -91,7 +98,27 @@ public class GameScreen extends BaseScreen {
         this.timerAccumulator = 0f;
         this.timerSeconds = 0;
         this.spawnTimer = 0f;
-        this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN, PROJECTILE_SPAWN_MAX);
+
+        // Patrón Abstract Factory - Seleccionar fábrica según dificultad
+        DifficultyManager.Difficulty difficulty = DifficultyManager.getInstance().getCurrentDifficulty();
+        switch (difficulty) {
+            case EASY:
+                this.entityFactory = new EasyGameEntityFactory();
+                // Modo fácil: spawn más lento
+                this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 1.5f, PROJECTILE_SPAWN_MAX * 1.5f);
+                break;
+            case HARD:
+                this.entityFactory = new HardGameEntityFactory();
+                // Modo difícil: spawn MUY rápido (50% más rápido)
+                this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 0.5f, PROJECTILE_SPAWN_MAX * 0.5f);
+                break;
+            case NORMAL:
+            default:
+                this.entityFactory = new NormalGameEntityFactory();
+                this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN, PROJECTILE_SPAWN_MAX);
+                break;
+        }
+
         this.nextPowerUpSpawn = MathUtils.random(POWERUP_SPAWN_MIN, POWERUP_SPAWN_MAX);
 
         // Crear el heart centrado
@@ -102,6 +129,9 @@ public class GameScreen extends BaseScreen {
         );
 
         this.heart.setLives(lives);
+
+        System.out.println("GameScreen iniciado con dificultad: " + difficulty.getDisplayName());
+        System.out.println("Usando fábrica: " + this.entityFactory.getFactoryTheme());
     }
 
     public void header() {
@@ -190,9 +220,27 @@ public class GameScreen extends BaseScreen {
 
         if (this.spawnTimer >= this.nextProjectileSpawn) {
             this.spawnTimer = 0f;
-            this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN, PROJECTILE_SPAWN_MAX);
 
-            if (MathUtils.randomBoolean(0.3f)) {
+            // Ajustar siguiente spawn según dificultad
+            DifficultyManager.Difficulty difficulty = DifficultyManager.getInstance().getCurrentDifficulty();
+            switch (difficulty) {
+                case EASY:
+                    this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 1.5f, PROJECTILE_SPAWN_MAX * 1.5f);
+                    break;
+                case HARD:
+                    // Modo difícil: spawn MUY rápido
+                    this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 0.5f, PROJECTILE_SPAWN_MAX * 0.5f);
+                    break;
+                case NORMAL:
+                default:
+                    this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN, PROJECTILE_SPAWN_MAX);
+                    break;
+            }
+
+            // En modo difícil, más probabilidad de bombas (50% en lugar de 30%)
+            float bombProbability = difficulty == DifficultyManager.Difficulty.HARD ? 0.5f : 0.3f;
+
+            if (MathUtils.randomBoolean(bombProbability)) {
                 spawnBomb();
             } else {
                 spawnBullet();
@@ -201,11 +249,48 @@ public class GameScreen extends BaseScreen {
     }
 
     private void spawnBullet() {
-        int topLimit = getVirtualHeight() - getTopBarHeight();
-        int randomX = MathUtils.random(0, getVirtualWidth() - ENTITY_SIZE);
-        int spawnY = topLimit - ENTITY_SIZE;
+        DifficultyManager.Difficulty difficulty = DifficultyManager.getInstance().getCurrentDifficulty();
 
-        this.projectiles.add(new Bullet(randomX, spawnY, this.bulletTx));
+        int spawnX, spawnY;
+
+        if (difficulty == DifficultyManager.Difficulty.HARD) {
+            // Modo difícil: spawn desde los 4 bordes de la pantalla
+            int edge = MathUtils.random(3); // 0=arriba, 1=abajo, 2=izquierda, 3=derecha
+
+            int bottomLimit = getBottomBarHeight();
+            int topLimit = getVirtualHeight() - getTopBarHeight();
+
+            switch (edge) {
+                case 0: // Desde ARRIBA (balas van hacia abajo)
+                    spawnX = MathUtils.random(0, getVirtualWidth() - ENTITY_SIZE);
+                    spawnY = topLimit - ENTITY_SIZE;
+                    break;
+
+                case 1: // Desde ABAJO (balas van hacia arriba)
+                    spawnX = MathUtils.random(0, getVirtualWidth() - ENTITY_SIZE);
+                    spawnY = bottomLimit;
+                    break;
+
+                case 2: // Desde IZQUIERDA (balas van hacia derecha)
+                    spawnX = -ENTITY_SIZE;
+                    spawnY = MathUtils.random(bottomLimit, topLimit - ENTITY_SIZE);
+                    break;
+
+                case 3: // Desde DERECHA (balas van hacia izquierda)
+                default:
+                    spawnX = getVirtualWidth();
+                    spawnY = MathUtils.random(bottomLimit, topLimit - ENTITY_SIZE);
+                    break;
+            }
+        } else {
+            // Modo normal/fácil: spawn desde arriba solamente
+            int topLimit = getVirtualHeight() - getTopBarHeight();
+            spawnX = MathUtils.random(0, getVirtualWidth() - ENTITY_SIZE);
+            spawnY = topLimit - ENTITY_SIZE;
+        }
+
+        // Patrón Abstract Factory - Usar fábrica para crear bullet
+        this.projectiles.add(this.entityFactory.createBullet(spawnX, spawnY, this.bulletTx));
     }
 
     private void spawnBomb() {
@@ -246,19 +331,19 @@ public class GameScreen extends BaseScreen {
             this.nextPowerUpSpawn = MathUtils.random(POWERUP_SPAWN_MIN, POWERUP_SPAWN_MAX);
 
             PowerUp newPowerUp;
-            // Generar aleatoriamente uno de los 3 power-ups
+            // Patrón Abstract Factory - Usar fábrica para crear power-ups
             float random = MathUtils.random();
             if (random < 0.33f) {
-                // 33% Shield
-                newPowerUp = new Shield(
+                // 33% Shield - usar fábrica
+                newPowerUp = this.entityFactory.createShield(
                     (int) getVirtualWidth(),
                     (int) getVirtualHeight(),
                     this.shieldTx,
                     POWERUP_DURATION
                 );
             } else if (random < 0.66f) {
-                // 33% SpeedUp
-                newPowerUp = new SpeedUp(
+                // 33% SpeedUp - usar fábrica
+                newPowerUp = this.entityFactory.createSpeedUp(
                     (int) getVirtualWidth(),
                     (int) getVirtualHeight(),
                     this.speedUpTx,
@@ -266,8 +351,8 @@ public class GameScreen extends BaseScreen {
                     SPEED_MULTIPLIER
                 );
             } else {
-                // 34% HealthBoost
-                newPowerUp = new HealthBoost(
+                // 34% HealthBoost - usar fábrica
+                newPowerUp = this.entityFactory.createHealthBoost(
                     (int) getVirtualWidth(),
                     (int) getVirtualHeight(),
                     this.healthBoostTx,
@@ -440,9 +525,15 @@ public class GameScreen extends BaseScreen {
         while (warningIterator.hasNext()) {
             BombWarning warning = warningIterator.next();
             if (warning.update(delta)) {
-                // Generar la bomba en la posición de la advertencia
-                this.projectiles.add(new Bomb((int)warning.x, (int)warning.y, this.bombTx, warning.xVel, warning.yVel));
-                warningIterator.remove(); // Remover la advertencia después de generar la bomba
+                // Patrón Abstract Factory - Generar la bomba usando la fábrica
+                this.projectiles.add(this.entityFactory.createBomb(
+                    (int)warning.x,
+                    (int)warning.y,
+                    this.bombTx,
+                    warning.xVel,
+                    warning.yVel
+                ));
+                warningIterator.remove();
             } else {
                 // Dibujar la advertencia
                 this.batch.draw(this.warningTx, warning.x, warning.y, ENTITY_SIZE, ENTITY_SIZE);
