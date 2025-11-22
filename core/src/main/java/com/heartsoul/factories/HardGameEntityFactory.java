@@ -13,8 +13,9 @@ import com.heartsoul.entities.powerups.SpeedUp;
 
 public class HardGameEntityFactory implements GameEntityFactory {
 
-    private static final float HARD_MODE_DURATION_MULTIPLIER = 0.5f; // Power-ups duran 50% menos
-    private static final float HARD_BULLET_SPEED = 7f; // Balas más rápidas (normal: 5)
+    private static final float HARD_MODE_DURATION_MULTIPLIER = 0.3f; // Power-ups duran solo 30% del tiempo (antes 50%)
+    private static final float HARD_BULLET_SPEED = 10f; // Balas MUCHO más rápidas (antes: 7, normal: 5)
+    private static final float HARD_BOMB_SPEED_MULTIPLIER = 3.0f; // Bombas 3x más rápidas (antes 2x)
 
     @Override
     public Projectile createBullet(int x, int y, Texture texture) {
@@ -65,21 +66,21 @@ public class HardGameEntityFactory implements GameEntityFactory {
 
     @Override
     public Projectile createBomb(int x, int y, Texture texture, float xVel, float yVel) {
-        // Bombas en modo difícil tienen velocidades DUPLICADAS
-        float hardXVel = xVel * 2.0f;
-        float hardYVel = yVel * 2.0f;
+        // Bombas en modo difícil tienen velocidades TRIPLICADAS
+        float hardXVel = xVel * HARD_BOMB_SPEED_MULTIPLIER;
+        float hardYVel = yVel * HARD_BOMB_SPEED_MULTIPLIER;
         return new Bomb(x, y, texture, hardXVel, hardYVel);
     }
 
     @Override
     public PowerUp createShield(int screenWidth, int screenHeight, Texture texture, float duration) {
-        // En modo difícil, el escudo dura MUCHO menos tiempo (50%)
+        // En modo difícil, el escudo dura MUCHO menos tiempo (30%)
         return new Shield(screenWidth, screenHeight, texture, duration * HARD_MODE_DURATION_MULTIPLIER);
     }
 
     @Override
     public PowerUp createSpeedUp(int screenWidth, int screenHeight, Texture texture, float duration, float speedMultiplier) {
-        // En modo difícil, el speed boost dura mucho menos
+        // En modo difícil, el speed boost dura mucho menos (30%)
         return new SpeedUp(screenWidth, screenHeight, texture, duration * HARD_MODE_DURATION_MULTIPLIER, speedMultiplier);
     }
 

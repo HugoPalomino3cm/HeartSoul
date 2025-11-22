@@ -109,8 +109,8 @@ public class GameScreen extends BaseScreen {
                 break;
             case HARD:
                 this.entityFactory = new HardGameEntityFactory();
-                // Modo difícil: spawn MUY rápido (50% más rápido)
-                this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 0.5f, PROJECTILE_SPAWN_MAX * 0.5f);
+                // Modo difícil: spawn EXTREMADAMENTE rápido (solo 25% del tiempo normal)
+                this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 0.25f, PROJECTILE_SPAWN_MAX * 0.25f);
                 break;
             case NORMAL:
             default:
@@ -228,8 +228,8 @@ public class GameScreen extends BaseScreen {
                     this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 1.5f, PROJECTILE_SPAWN_MAX * 1.5f);
                     break;
                 case HARD:
-                    // Modo difícil: spawn MUY rápido
-                    this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 0.5f, PROJECTILE_SPAWN_MAX * 0.5f);
+                    // Modo difícil: spawn EXTREMADAMENTE rápido
+                    this.nextProjectileSpawn = MathUtils.random(PROJECTILE_SPAWN_MIN * 0.25f, PROJECTILE_SPAWN_MAX * 0.25f);
                     break;
                 case NORMAL:
                 default:
@@ -418,14 +418,14 @@ public class GameScreen extends BaseScreen {
         float dx = 0f;
         float dy = 0f;
         if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-            dx = -2f;
+            dx = -5f;
         } else if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-            dx = 2f;
+            dx = 5f;
         }
         if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-            dy = -2f;
+            dy = -5f;
         } else if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-            dy = 2f;
+            dy = 5f;
         }
 
         // Movemos el heart

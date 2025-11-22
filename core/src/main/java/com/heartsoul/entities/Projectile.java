@@ -32,18 +32,12 @@ public abstract class Projectile extends Entity {
         }
     }
 
-    /**
-     * Método para verificar límites usando la estrategia
-     */
     public void checkBounds(GameScreen game) {
         if (this.movementStrategy != null) {
             this.movementStrategy.checkBounds(this, game);
         }
     }
 
-    /**
-     * Destruir el proyectil al colisionar
-     */
     public void onCollision() {
         setDead(true);
     }
@@ -70,9 +64,6 @@ public abstract class Projectile extends Entity {
         this.yVelocity = yVelocity;
     }
 
-    /**
-     * Permite cambiar la estrategia de movimiento en tiempo de ejecución
-     */
     public void setMovementStrategy(MovementStrategy strategy) {
         this.movementStrategy = strategy;
     }
